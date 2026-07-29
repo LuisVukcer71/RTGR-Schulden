@@ -1,0 +1,39 @@
+<div class="dashboard-wrapper">
+  <app-add-bill *ngIf="isAddBillModalOpen" (close)="closeAddBillModal()"></app-add-bill>
+  
+  <main class="content-area">
+    <div *ngIf="activeTab === 'expenses'">
+      <app-ausgaben-uebersicht></app-ausgaben-uebersicht>
+    </div>
+
+    <div *ngIf="activeTab === 'friends'">
+      <app-friends></app-friends>
+    </div>
+
+    <div *ngIf="activeTab === 'profile'">
+      <app-profile></app-profile>
+    </div>
+  </main>
+
+  <!-- UNTERE NAVIGATION CONTAINER -->
+  <div class="bottom-nav-container" [class.scrolled]="isScrolled">
+    <div class="dock-wrapper">
+      
+      <app-tab-menu 
+        [tabs]="navTabs" 
+        [activeTabId]="activeTab" 
+        (tabChange)="onTabChanged($event)"
+      ></app-tab-menu>
+
+      <div class="center-glow-halo"></div>
+
+      <button class="fab-center-btn" (click)="openAddBillModal()" aria-label="Neue Rechnung hinzufügen" type="button">
+        <svg class="plus-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </button>
+
+    </div>
+  </div>
+</div>

@@ -1,0 +1,268 @@
+/* ==========================================
+   1. GLOBAL TRANSPARENCY RESET (Stil-Erhaltung)
+   ========================================== */
+:host,
+:host *,
+bubble,
+header,
+nav,
+main,
+section,
+div,
+span,
+p,
+ul,
+li {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-sizing: border-box;
+}
+
+.app-viewport {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 400px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 1rem 0 6rem 0;
+  color: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  z-index: 1;
+  animation: appFadeIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+
+/* ==========================================
+   2. LICHTKEGEL & BACKGROUND EFFEKTE
+   ========================================== */
+.light-cone-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 400px;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.light-edge-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.9) 30%, rgba(99, 102, 241, 1) 50%, rgba(56, 189, 248, 0.9) 70%, transparent 100%) !important;
+  box-shadow: 0 0 15px #38bdf8, 0 0 30px #3b82f6;
+  animation: shimmerLine 4s infinite linear;
+}
+
+.light-cone-main {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 500px;
+  height: 350px;
+  background: radial-gradient(ellipse at top center, rgba(37, 99, 235, 0.65) 0%, rgba(14, 165, 233, 0.3) 40%, rgba(15, 23, 42, 0) 75%) !important;
+  filter: blur(40px);
+  animation: breatheSlow 8s infinite ease-in-out alternate;
+  will-change: transform, opacity;
+}
+
+.light-cone-ambient {
+  position: absolute;
+  top: 0;
+  left: 10%;
+  width: 80%;
+  height: 220px;
+  background: radial-gradient(ellipse at top, rgba(99, 102, 241, 0.35) 0%, transparent 70%) !important;
+  filter: blur(50px);
+  animation: breatheSlowAmbient 10s infinite ease-in-out alternate-reverse;
+}
+
+/* ==========================================
+   3. HEADER & TITLE
+   ========================================== */
+.scroll-header-group {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  padding: 0.25rem 1rem 0 1rem;
+  margin-bottom: 1.25rem;
+  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  animation-delay: 0.1s;
+}
+
+.scroll-header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.sticky-tabs-container {
+  width: 100%;
+}
+
+.header-title-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0.75rem 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.header-icon {
+  width: 20px;
+  height: 20px;
+  stroke: #38bdf8;
+  filter: drop-shadow(0 2px 6px rgba(56, 189, 248, 0.5));
+}
+
+/* ==========================================
+   4. CARDS & PROFILE CONTENT
+   ========================================== */
+.transactions-section {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 0 1rem;
+}
+
+.transaction-card {
+  margin-bottom: 0.75rem;
+  /* Optimierte 0.35s Dauer */
+  animation: cardEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.profile-card-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 1.25rem 1.15rem;
+  width: 100%;
+}
+
+.profile-avatar-large {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.3rem;
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+  border: 2px solid rgba(56, 189, 248, 0.6);
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: left;
+}
+
+.profile-name {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.profile-email {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+/* ==========================================
+   5. LOGOUT BUTTON
+   ========================================== */
+.logout-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0.9rem;
+  background: rgba(244, 63, 94, 0.1) !important;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  border-radius: 12px;
+  color: #f43f5e;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.logout-btn:hover {
+  background: rgba(244, 63, 94, 0.2) !important;
+  border-color: rgba(244, 63, 94, 0.6);
+  box-shadow: 0 4px 20px rgba(244, 63, 94, 0.25);
+  transform: translateY(-1px);
+}
+
+.logout-btn:active {
+  transform: scale(0.97);
+}
+
+.logout-icon {
+  width: 18px;
+  height: 18px;
+  stroke: #f43f5e;
+}
+
+/* ==========================================
+   6. KEYFRAMES
+   ========================================== */
+@keyframes breatheSlow {
+  0% { opacity: 0.6; transform: translateX(-50%) scale(1); }
+  100% { opacity: 0.85; transform: translateX(-50%) scale(1.08); }
+}
+
+@keyframes breatheSlowAmbient {
+  0% { opacity: 0.5; transform: scale(1); }
+  100% { opacity: 0.8; transform: scale(1.15) translateY(10px); }
+}
+
+@keyframes shimmerLine {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes appFadeIn {
+  from { opacity: 0; filter: blur(6px); transform: scale(0.99); }
+  to { opacity: 1; filter: blur(0); transform: scale(1); }
+}
+
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.92) translateY(8px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes cardEntrance {
+  0% { 
+    opacity: 0; 
+    transform: translateY(12px) scale(0.97); 
+    filter: blur(3px); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+    filter: blur(0); 
+  }
+}

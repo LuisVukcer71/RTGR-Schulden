@@ -1,0 +1,149 @@
+/* Container zum Zentrieren */
+.auth-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 85vh;
+  padding: 2rem;
+}
+
+/* Karten-Inhalt: Zentriert den gesamten Content vertikal & horizontal */
+.auth-card-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 2.5rem 1.5rem;
+  box-sizing: border-box;
+}
+
+/* Entfernt alle störenden Hintergrundfarben */
+.auth-card-content,
+.auth-title, 
+.auth-form, 
+.form-group,
+.toggle-box,
+label,
+span {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Titel oben */
+.auth-title {
+  margin: 0 0 1.75rem 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-align: center;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+/* Formular Aufbau – auf kompakte Breite beschränkt */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 280px; /* <--- Steuert die Breite von Inputs & Button */
+  margin: 0 auto;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 500;
+  padding-left: 2px;
+}
+
+/* Eingabefelder: Schlanker & kompakter */
+input {
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #0f172a !important;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem; /* Weniger Höhen-Padding */
+  color: #ffffff;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input::placeholder {
+  color: #475569;
+}
+
+input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+/* Haupt-Button: Kompakter & passend zu den Inputs */
+.btn-primary {
+  margin-top: 0.5rem;
+  width: 100%;
+  background-color: #2563eb !important;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.7rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-primary:hover {
+  background-color: #1d4ed8 !important;
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+/* Unterer Toggle-Bereich */
+.toggle-box {
+  margin-top: 1.75rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.btn-link {
+  background: none !important;
+  border: none;
+  color: #3b82f6;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 0.3rem;
+  padding: 0;
+  font-size: 0.85rem;
+  transition: color 0.2s ease;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+  color: #60a5fa;
+}
+
+.msg-error {
+  color: #f87171;
+  font-size: 0.85rem;
+  margin: -0.5rem 0 1rem 0;
+  text-align: center;
+}
+
+.msg-success {
+  color: #4ade80;
+  font-size: 0.85rem;
+  margin: -0.5rem 0 1rem 0;
+  text-align: center;
+}

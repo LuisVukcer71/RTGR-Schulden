@@ -1,0 +1,23 @@
+<nav class="mobile-tab-nav">
+  <bubble width="100%" height="72px">
+    <div class="tab-container">
+      <button 
+        *ngFor="let tab of tabs" 
+        type="button" 
+        class="tab-item"
+        [class.active]="tab.id === activeTabId"
+        (click)="selectTab(tab.id)"
+      >
+        <!-- Schwebender Glow-Backdrop hinter dem aktiven Item -->
+        <div class="active-glow-pill" *ngIf="tab.id === activeTabId"></div>
+
+        <!-- SVG Icon -->
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path [attr.d]="tab.iconPath" />
+        </svg>
+
+        <span class="tab-label">{{ tab.label }}</span>
+      </button>
+    </div>
+  </bubble>
+</nav>

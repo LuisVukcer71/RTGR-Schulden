@@ -1,0 +1,30 @@
+.bubble-container {
+  background: linear-gradient(145deg, #181a20, #131418) !important;
+  border: 1px solid rgba(0, 98, 255, 0.25);
+  border-radius: 16px;
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    0 0 15px rgba(0, 98, 255, 0.08);
+  color: #ffffff;
+  box-sizing: border-box;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.bubble-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 98, 255, 0.5), transparent);
+}
+
+.bubble-container:hover {
+  border-color: rgba(0, 98, 255, 0.45);
+  box-shadow: 
+    0 6px 24px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(0, 98, 255, 0.15);
+}

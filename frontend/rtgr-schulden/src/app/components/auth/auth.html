@@ -1,0 +1,53 @@
+<div class="auth-wrapper">
+  <bubble width="300px" height="400px">
+    
+    <div class="auth-card-content">
+      <h2 class="auth-title">
+        {{ isLoginMode ? 'Willkommen' : 'Account erstellen' }}
+      </h2>
+      <p *ngIf="errorMessage" class="msg-error">{{ errorMessage }}</p>
+      <p *ngIf="successMessage" class="msg-success">{{ successMessage }}</p>
+
+      <form (ngSubmit)="onSubmit()" class="auth-form">
+        <div class="form-group">
+          <label for="username">Name</label>
+          <input 
+            type="text" 
+            id="username" 
+            [(ngModel)]="username" 
+            name="username" 
+            placeholder="Dein Name"
+            autocomplete="username"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="password">Passwort</label>
+          <input 
+            type="password" 
+            id="password" 
+            [(ngModel)]="password" 
+            name="password" 
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required
+          >
+        </div>
+
+        <button type="submit" class="btn-primary">
+          {{ isLoginMode ? 'Anmelden' : 'Registrieren' }}
+        </button>
+      </form>
+
+      <!-- Registrieren / Anmelden Toggle -->
+      <div class="toggle-box">
+        <span>{{ isLoginMode ? 'Noch kein Konto?' : 'Bereits registriert?' }}</span>
+        <button type="button" (click)="toggleMode()" class="btn-link">
+          {{ isLoginMode ? 'Jetzt erstellen' : 'Zum Login' }}
+        </button>
+      </div>
+    </div>
+
+  </bubble>
+</div>

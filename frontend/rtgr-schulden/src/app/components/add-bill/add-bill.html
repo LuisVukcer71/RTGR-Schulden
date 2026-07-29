@@ -1,0 +1,87 @@
+<div class="modal-backdrop" (click)="closeModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    
+    <!-- Header -->
+    <div class="modal-header">
+      <h2>Neue Rechnung</h2>
+      <button class="close-btn" (click)="closeModal()" [disabled]="isSubmitting">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <!-- Formular -->
+    <div class="modal-body">
+      
+      <!-- Verwendungszweck -->
+      <div class="input-group">
+        <label>Wofür?</label>
+        <input type="text" [(ngModel)]="title" placeholder="z.B. Restaurant, Kino, Wocheneinkauf..." [disabled]="isSubmitting" />
+      </div>
+
+      <!-- Betrag -->
+      <div class="input-group">
+        <label>Gesamtbetrag</label>
+        <div class="amount-input-wrapper">
+          <span class="currency">€</span>
+          <input type="number" [(ngModel)]="totalAmount" placeholder="0.00" step="0.01" min="0.01" [disabled]="isSubmitting" />
+        </div>
+      </div>
+
+      <!-- Wer hat bezahlt? -->
+      <div class="input-group">
+        <label>Bezahlt von</label>
+        <select [(ngModel)]="paidBy" class="styled-select" [disabled]="isSubmitting">
+          <option value="Ich">Ich</option>
+          <option *ngFor="let friend of friends" [value]="friend">{{ friend }}</option>
+        </select>
+      </div>
+
+      <!-- Wer war dabei? (Chips Auswahl) -->
+      <div class="input-group">
+        <label>Beteiligte Personen ({{ selectedParticipants.length }})</label>
+        <div class="chips-grid">
+          <button 
+            type="button" 
+            class="chip" 
+            [class.active]="selectedParticipants.includes('Ich')"
+            [disabled]="isSubmitting"
+            (click)="toggleParticipant('Ich')">
+            Ich
+          </button>
+          <button 
+            type="button" 
+            class="chip" 
+            *ngFor="let friend of friends" 
+            [class.active]="selectedParticipants.includes(friend)"
+            [disabled]="isSubmitting"
+            (click)="toggleParticipant(friend)">
+            {{ friend }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Vorschau Box -->
+      <div class="preview-box" *ngIf="totalAmount && selectedParticipants.length > 0">
+        <div class="preview-row">
+          <span>Anteil pro Person:</span>
+          <span class="highlight-amount">{{ perPersonShare | currency:'EUR':'symbol':'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <!-- Fehlermeldung -->
+      <div class="error-box" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeModal()" [disabled]="isSubmitting">Abbrechen</button>
+      <button class="btn-submit" (click)="submitBill()" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Wird gespeichert...' : 'Rechnung aufteilen' }}
+      </button>
+    </div>
+
+  </div>
+</div>
