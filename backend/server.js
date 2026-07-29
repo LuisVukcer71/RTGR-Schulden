@@ -17,7 +17,23 @@ app.use((req, res, next) => {
 });
 
 // Middleware
-app.use(cors());
+const allowedOrigins = [
+  'http://localhost:4200', // Zum lokalen Testen
+  'https://rtgr-schulden-oncrsbnms-luismeinhardtwien-2884s-projects.vercel.app/' // Deine echte Vercel-URL (ersetze sie falls sie exakt anders heißt)
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Erlaube Requests ohne Origin (z.B. Postman oder mobile Apps) oder von unserer Liste
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS policy violation: Origin not allowed'));
+    }
+  },
+  credentials: true
+}));
+
 app.use(express.json());
 
 // MySQL Verbindungspool
