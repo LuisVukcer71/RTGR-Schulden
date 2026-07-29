@@ -16,15 +16,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware
+// Middleware (CORS für Vercel & lokal)
 const allowedOrigins = [
   'http://localhost:4200', // Zum lokalen Testen
-  'https://rtgr-schulden-oncrsbnms-luismeinhardtwien-2884s-projects.vercel.app/' // Deine echte Vercel-URL (ersetze sie falls sie exakt anders heißt)
+  'https://rtgr-schulden.vercel.app' // Deine echte Vercel-URL
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Erlaube Requests ohne Origin (z.B. Postman oder mobile Apps) oder von unserer Liste
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -36,16 +35,20 @@ app.use(cors({
 
 app.use(express.json());
 
-// MySQL Verbindungspool
+// MySQL Verbindungspool (mit Umgebungsvariablen & SSL für Aiven)
 const pool = mysql.createPool({
-  host: '127.0.0.1',
-  user: 'root',
-  password: '',
-  database: 'schulden_db',
+  host: process.env.DB_HOST || '127.0.0.1',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'schulden_db',
+  port: process.env.DB_PORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  decimalNumbers: true
+  decimalNumbers: true,
+  ssl: {
+    rejectUnauthorized: false // Erforderlich für externe Cloud-DBs wie Aiven
+  }
 });
 
 // Tabellen beim Start sicherstellen (Variante A)
@@ -94,13 +97,18 @@ async function initDB() {
     `);
 
     connection.release();
-    console.log('✅ Erfolgreich mit der MySQL-Datenbank verbunden & Tabellen (Variante A) überprüft!');
+    console.log('✅ Erfolgreich mit der MySQL-Datenbank verbunden & Tabellen überprüft!');
   } catch (err) {
     console.error('❌ Fehler bei der Datenbank-Initialisierung:', err.message);
   }
 }
 
 initDB();
+
+// --- KEEP-ALIVE INTERVALL (Jede Stunde ein Log, damit der Prozess aktiv bleibt) ---
+setInterval(() => {
+  console.log('🔄 Keep-Alive Ping: Server läuft stabil.');
+}, 60 * 60 * 1000); // 1 Stunde in Millisekunden
 
 // --- AUTH MIDDLEWARE ---
 function authenticateToken(req, res, next) {
@@ -187,9 +195,8 @@ app.get('/api/users', authenticateToken, async (req, res) => {
   }
 });
 
-// --- TRANSACTIONS & BILLS ROUTEN (Variante A) ---
+// --- TRANSACTIONS & BILLS ROUTEN ---
 
-// 1. Alle Transaktionen (Schulden) für den eingeloggten User abrufen
 app.get('/api/transactions', authenticateToken, async (req, res) => {
   try {
     const currentUserId = req.userId;
@@ -244,7 +251,6 @@ app.get('/api/transactions', authenticateToken, async (req, res) => {
   }
 });
 
-// 2. Rechnung erstellen und automatisch aufteilen (Splitwise Logik)
 app.post('/api/bills', authenticateToken, async (req, res) => {
   const connection = await pool.getConnection();
   try {
@@ -323,11 +329,10 @@ app.post('/api/bills', authenticateToken, async (req, res) => {
   }
 });
 
-// 3. Settlement-Workflow (Bezahlt markieren, bestätigen, abbrechen, wieder öffnen)
 app.patch('/api/transactions/:id/settlement', authenticateToken, async (req, res) => {
   try {
     const splitId = req.params.id;
-    const { action } = req.body; // 'request' | 'confirm' | 'cancel' | 'reopen'
+    const { action } = req.body; 
     const currentUserId = req.userId;
 
     const [splits] = await pool.query('SELECT * FROM expense_splits WHERE id = ?', [splitId]);
@@ -393,7 +398,6 @@ app.patch('/api/transactions/:id/settlement', authenticateToken, async (req, res
   }
 });
 
-// 4. Einzelne Transaktion löschen
 app.delete('/api/transactions/:id', authenticateToken, async (req, res) => {
   try {
     const splitId = req.params.id;
@@ -421,10 +425,7 @@ app.get('/api/friends', authenticateToken, async (req, res) => {
   try {
     const currentUserId = req.userId;
 
-    // Alle anderen User holen
     const [users] = await pool.query('SELECT id, username FROM users WHERE id != ?', [currentUserId]);
-
-    // Alle offenen/relevanten Splits für den User holen
     const [splits] = await pool.query(`
       SELECT creditor_id, debtor_id, amount, is_paid 
       FROM expense_splits 
@@ -436,12 +437,11 @@ app.get('/api/friends', authenticateToken, async (req, res) => {
 
       splits.forEach(split => {
         const amount = Number(split.amount);
-        // Wenn die Transaktion noch nicht bezahlt ist, fließt sie in den Saldo ein
         if (!split.is_paid) {
           if (split.creditor_id === currentUserId && split.debtor_id === user.id) {
-            balance += amount; // Der andere schuldet mir Geld (+)
+            balance += amount; 
           } else if (split.debtor_id === currentUserId && split.creditor_id === user.id) {
-            balance -= amount; // Ich schulde dem anderen Geld (-)
+            balance -= amount; 
           }
         }
       });
@@ -460,7 +460,6 @@ app.get('/api/friends', authenticateToken, async (req, res) => {
   }
 });
 
-// 2. Gesamt-Statistiken für den eingeloggten User abrufen
 app.get('/api/friends/statistics', authenticateToken, async (req, res) => {
   try {
     const currentUserId = req.userId;
@@ -471,8 +470,8 @@ app.get('/api/friends/statistics', authenticateToken, async (req, res) => {
       WHERE creditor_id = ? OR debtor_id = ?
     `, [currentUserId, currentUserId]);
 
-    let totalSpent = 0;     // Was ich insgesamt ausgegeben habe / Schulden
-    let totalReceived = 0;  // Was mir insgesamt zusteht
+    let totalSpent = 0;    
+    let totalReceived = 0;  
     const activeFriendsSet = new Set();
 
     splits.forEach(split => {
