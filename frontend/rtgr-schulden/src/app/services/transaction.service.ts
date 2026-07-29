@@ -34,7 +34,7 @@ type SettlementAction = 'request' | 'confirm' | 'cancel' | 'reopen';
   providedIn: 'root'
 })
 export class TransactionService {
-  private apiUrl = 'http://localhost:3000/api';
+  private apiUrl = 'https://rtgr-schulden-backend.onrender.com/api';
 
   // Single Source of Truth: alle Komponenten abonnieren transactions$
   // statt eigene, lokale Kopien der Liste zu halten.

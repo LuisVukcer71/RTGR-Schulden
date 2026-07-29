@@ -22,7 +22,7 @@ export class FriendService {
   private http = inject(HttpClient);
   
   // Passe die URL an dein Backend an
-  private apiUrl = 'http://localhost:3000/api/friends'; 
+  private apiUrl = 'https://rtgr-schulden-backend.onrender.com/api/friends'; 
 
   private friendsSubject = new BehaviorSubject<FriendItem[]>([]);
   friends$ = this.friendsSubject.asObservable();

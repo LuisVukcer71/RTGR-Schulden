@@ -9,7 +9,7 @@ import { TransactionService } from './transaction.service';
 export class AuthService {
   private http = inject(HttpClient);
   private transactionService = inject(TransactionService);
-  private apiUrl = 'http://localhost:3000/api';
+  private apiUrl = 'https://rtgr-schulden-backend.onrender.com/api';
 
   login(username: string, password: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/login`, { username, password }).pipe(
