@@ -16,17 +16,28 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware (CORS für Vercel & lokal)
+// Middleware (CORS - gleicht URLs flexibel ab und ignoriert Slashes am Ende)
 const allowedOrigins = [
-  'http://localhost:4200', // Zum lokalen Testen
-  'https://rtgr-schulden.vercel.app' // Deine echte Vercel-URL
+  'http://localhost:4200',
+  'https://rtgr-schulden.vercel.app',
+  'https://rtgr-schulden-oncrsbnms-luismeinhardtwien-2884s-projects.vercel.app' // Deine aus der früheren Konfig falls benötigt
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    // Erlaube Requests ohne Origin (z.B. Postman, Server-to-Server)
+    if (!origin) return callback(null, true);
+
+    // Normalisiere die Origin (entferne einen eventuellen Slash am Ende)
+    const normalizedOrigin = origin.replace(/\/$/, '');
+
+    // Prüfe, ob die Domain erlaubt ist oder zu Vercel gehört
+    const isAllowed = allowedOrigins.some(allowed => allowed.replace(/\/$/, '') === normalizedOrigin) || normalizedOrigin.endsWith('.vercel.app');
+
+    if (isAllowed) {
       callback(null, true);
     } else {
+      console.warn(`❌ CORS Blocked Origin: ${origin}`);
       callback(new Error('CORS policy violation: Origin not allowed'));
     }
   },
@@ -47,11 +58,11 @@ const pool = mysql.createPool({
   queueLimit: 0,
   decimalNumbers: true,
   ssl: {
-    rejectUnauthorized: false // Erforderlich für externe Cloud-DBs wie Aiven
+    rejectUnauthorized: false
   }
 });
 
-// Tabellen beim Start sicherstellen (Variante A)
+// Tabellen beim Start sicherstellen
 async function initDB() {
   try {
     const connection = await pool.getConnection();
@@ -105,10 +116,10 @@ async function initDB() {
 
 initDB();
 
-// --- KEEP-ALIVE INTERVALL (Jede Stunde ein Log, damit der Prozess aktiv bleibt) ---
+// --- KEEP-ALIVE INTERVALL ---
 setInterval(() => {
   console.log('🔄 Keep-Alive Ping: Server läuft stabil.');
-}, 60 * 60 * 1000); // 1 Stunde in Millisekunden
+}, 60 * 60 * 1000);
 
 // --- AUTH MIDDLEWARE ---
 function authenticateToken(req, res, next) {
