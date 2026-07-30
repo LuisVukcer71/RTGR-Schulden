@@ -1,13 +1,20 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-bitte-in-produktion-aendern';
+if (!process.env.JWT_SECRET) {
+  console.error('❌ JWT_SECRET ist nicht gesetzt. Server wird aus Sicherheitsgründen nicht gestartet.');
+  process.exit(1);
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 const SALT_ROUNDS = 10;
 
 // Request Logger
@@ -31,8 +38,11 @@ app.use(cors({
     // Normalisiere die Origin (entferne einen eventuellen Slash am Ende)
     const normalizedOrigin = origin.replace(/\/$/, '');
 
-    // Prüfe, ob die Domain erlaubt ist oder zu Vercel gehört
-    const isAllowed = allowedOrigins.some(allowed => allowed.replace(/\/$/, '') === normalizedOrigin) || normalizedOrigin.endsWith('.vercel.app');
+    // Prüfe, ob die Domain in der Allowlist ist oder ein Vercel-Preview-Deployment
+    // exakt dieses Projekts ist (NICHT irgendeine beliebige *.vercel.app Domain).
+    const isAllowed =
+      allowedOrigins.some(allowed => allowed.replace(/\/$/, '') === normalizedOrigin) ||
+      /^https:\/\/rtgr-schulden-[a-z0-9-]+-luismeinhardtwien-2884s-projects\.vercel\.app$/.test(normalizedOrigin);
 
     if (isAllowed) {
       callback(null, true);
@@ -121,6 +131,15 @@ setInterval(() => {
   console.log('🔄 Keep-Alive Ping: Server läuft stabil.');
 }, 60 * 60 * 1000);
 
+// --- RATE LIMITING (Brute-Force-Schutz für Login/Registrierung) ---
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Zu viele Versuche. Bitte später erneut probieren.' }
+});
+
 // --- AUTH MIDDLEWARE ---
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -141,7 +160,7 @@ function authenticateToken(req, res, next) {
 
 // --- AUTH ROUTEN ---
 
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', authLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -166,7 +185,7 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', authLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -270,9 +289,16 @@ app.post('/api/bills', authenticateToken, async (req, res) => {
     const currentUserId = req.userId;
     const { title, totalAmount, paidBy, participants, date } = req.body;
 
-    if (!title || !totalAmount || !participants || !Array.isArray(participants) || participants.length === 0) {
-      await connection.release();
+    const totalAmountNum = Number(totalAmount);
+
+    if (!title || !title.trim() || !participants || !Array.isArray(participants) || participants.length === 0) {
+      connection.release();
       return res.status(400).json({ error: 'Ungültige Rechnungsdaten.' });
+    }
+
+    if (!Number.isFinite(totalAmountNum) || totalAmountNum <= 0) {
+      connection.release();
+      return res.status(400).json({ error: 'Der Betrag muss eine positive Zahl sein.' });
     }
 
     let paidById = currentUserId;
@@ -288,7 +314,7 @@ app.post('/api/bills', authenticateToken, async (req, res) => {
 
     const [expenseResult] = await connection.query(
       'INSERT INTO expenses (title, total_amount, paid_by, created_by, date) VALUES (?, ?, ?, ?, ?)',
-      [title, totalAmount, paidById, currentUserId, date || 'Heute']
+      [title.trim(), totalAmountNum, paidById, currentUserId, date || 'Heute']
     );
     const expenseId = expenseResult.insertId;
 
@@ -315,16 +341,31 @@ app.post('/api/bills', authenticateToken, async (req, res) => {
       participantIds.push(id);
     }
 
-    const sharePerPerson = Number((totalAmount / participantIds.length).toFixed(2));
+    // Duplikate entfernen (z.B. falls derselbe Teilnehmer zweimal ausgewählt wurde),
+    // sonst würde dieselbe Person zweimal eine Schuld für dieselbe Rechnung bekommen.
+    const uniqueParticipantIds = Array.from(new Set(participantIds));
 
-    for (const debtorId of participantIds) {
+    // Aufteilung in Cent statt Fließkomma-Division, damit die Summe aller
+    // Anteile exakt totalAmount ergibt (kein Rundungsverlust wie z.B. bei
+    // 100 / 3 = 33.33 + 33.33 + 33.33 = 99.99). Der Rest-Cent wird auf die
+    // ersten Teilnehmer verteilt.
+    const totalCents = Math.round(totalAmountNum * 100);
+    const participantCount = uniqueParticipantIds.length;
+    const baseCents = Math.floor(totalCents / participantCount);
+    const remainderCents = totalCents - baseCents * participantCount;
+
+    for (let i = 0; i < uniqueParticipantIds.length; i++) {
+      const debtorId = uniqueParticipantIds[i];
       if (debtorId === paidById) {
         continue;
       }
 
+      const shareCents = baseCents + (i < remainderCents ? 1 : 0);
+      const shareAmount = shareCents / 100;
+
       await connection.query(
         'INSERT INTO expense_splits (expense_id, creditor_id, debtor_id, amount) VALUES (?, ?, ?, ?)',
-        [expenseId, paidById, debtorId, sharePerPerson]
+        [expenseId, paidById, debtorId, shareAmount]
       );
     }
 

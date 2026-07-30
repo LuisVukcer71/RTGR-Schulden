@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Transaction {
   id: string;
@@ -34,7 +35,7 @@ type SettlementAction = 'request' | 'confirm' | 'cancel' | 'reopen';
   providedIn: 'root'
 })
 export class TransactionService {
-  private apiUrl = 'https://rtgr-schulden-backend.onrender.com/api';
+  private apiUrl = environment.apiUrl;
 
   // Single Source of Truth: alle Komponenten abonnieren transactions$
   // statt eigene, lokale Kopien der Liste zu halten.

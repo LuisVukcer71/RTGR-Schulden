@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface FriendItem {
   id: string;
@@ -21,8 +22,7 @@ export interface FriendStatistics {
 export class FriendService {
   private http = inject(HttpClient);
   
-  // Passe die URL an dein Backend an
-  private apiUrl = 'https://rtgr-schulden-backend.onrender.com/api/friends'; 
+  private apiUrl = `${environment.apiUrl}/friends`;
 
   private friendsSubject = new BehaviorSubject<FriendItem[]>([]);
   friends$ = this.friendsSubject.asObservable();

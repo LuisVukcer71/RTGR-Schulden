@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { Bubble } from '../bubble/bubble';
-import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth';
 
 interface UserProfile {
   id: number;
@@ -15,7 +15,7 @@ interface UserProfile {
   styleUrls: ['./profile.css']
 })
 export class ProfileComponent implements OnInit {
-  private http = inject(HttpClient);
+  private authService = inject(AuthService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
@@ -34,8 +34,7 @@ export class ProfileComponent implements OnInit {
   }
 
   logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    this.router.navigate(['/login']);
+    this.authService.logout();
+    this.router.navigate(['/auth']);
   }
 }
