@@ -24,6 +24,7 @@
   height: 2px;
   background: linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.9) 30%, rgba(99, 102, 241, 1) 50%, rgba(56, 189, 248, 0.9) 70%, transparent 100%);
   box-shadow: 0 0 15px #38bdf8, 0 0 30px #3b82f6;
+  animation: edgeShimmer 5s var(--ease) infinite alternate;
 }
 
 .light-cone-main {
@@ -36,6 +37,7 @@
   height: 350px;
   background: radial-gradient(ellipse at top center, rgba(37, 99, 235, 0.65) 0%, rgba(14, 165, 233, 0.3) 40%, rgba(15, 23, 42, 0) 75%);
   filter: blur(40px);
+  animation: auroraDrift 16s ease-in-out infinite alternate;
 }
 
 .light-cone-ambient {
@@ -46,6 +48,7 @@
   height: 220px;
   background: radial-gradient(ellipse at top, rgba(99, 102, 241, 0.35) 0%, transparent 70%);
   filter: blur(50px);
+  animation: ambientDrift 21s ease-in-out infinite alternate;
 }
 
 /* ==========================================
@@ -121,6 +124,7 @@ app-tab-menu {
   filter: blur(18px);
   z-index: 5;
   pointer-events: none;
+  animation: createHalo 2.8s var(--ease) infinite;
 }
 
 .fab-center-btn {
@@ -147,6 +151,17 @@ app-tab-menu {
               0 4px 12px rgba(0, 0, 0, 0.4),
               inset 0 2px 4px rgba(255, 255, 255, 0.45);
   transition: transform var(--dur-quick) var(--ease), box-shadow var(--dur-normal) var(--ease);
+  animation: createButtonArrival var(--dur-slow) var(--ease-emphasized) both;
+}
+
+.fab-center-btn::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border: 1px solid rgba(56, 189, 248, 0.55);
+  border-radius: inherit;
+  opacity: 0;
+  animation: createPulse 2.8s var(--ease) infinite;
 }
 
 .plus-icon {
@@ -163,6 +178,37 @@ app-tab-menu {
 
 .fab-center-btn:active {
   transform: scale(0.96);
+}
+
+@keyframes edgeShimmer {
+  from { opacity: 0.66; transform: scaleX(0.72); }
+  to { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes auroraDrift {
+  from { transform: translateX(-54%) translateY(-8px) scale(0.96); opacity: 0.72; }
+  to { transform: translateX(-46%) translateY(12px) scale(1.08); opacity: 1; }
+}
+
+@keyframes ambientDrift {
+  from { transform: translate3d(-4%, -4px, 0) scale(0.94); opacity: 0.48; }
+  to { transform: translate3d(7%, 13px, 0) scale(1.08); opacity: 0.82; }
+}
+
+@keyframes createHalo {
+  0%, 100% { transform: scale(0.9); opacity: 0.5; }
+  50% { transform: scale(1.08); opacity: 0.9; }
+}
+
+@keyframes createPulse {
+  0%, 72%, 100% { transform: scale(0.86); opacity: 0; }
+  82% { opacity: 0.72; }
+  96% { transform: scale(1.22); opacity: 0; }
+}
+
+@keyframes createButtonArrival {
+  from { opacity: 0; transform: translateY(12px) scale(0.78); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 app-add-bill {

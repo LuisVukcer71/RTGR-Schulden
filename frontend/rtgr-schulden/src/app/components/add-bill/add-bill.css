@@ -10,9 +10,9 @@
   to { opacity: 0; }
 }
 
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+@keyframes sheetPresent {
+  from { opacity: 0; transform: translateY(48px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes slideDown {
@@ -54,7 +54,7 @@
   box-shadow: 0 -15px 40px rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  animation: slideUp var(--dur-slow) var(--ease-emphasized) forwards;
+  animation: sheetPresent var(--dur-slow) var(--ease-emphasized) forwards;
   max-height: 90vh;
   overflow-y: auto;
   color: #f8fafc;
@@ -81,7 +81,7 @@
   color: #94a3b8;
   font-size: 0.9rem;
   font-weight: 500;
-  animation: slideUp var(--dur-slow) var(--ease-emphasized) forwards;
+  animation: sheetPresent var(--dur-slow) var(--ease-emphasized) forwards;
 }
 
 /* ==========================================
@@ -137,6 +137,21 @@
   flex-direction: column;
   gap: 0.4rem;
 }
+
+.modal-header,
+.input-group,
+.preview-box,
+.modal-footer {
+  animation: sheetContentIn var(--dur-normal) var(--ease) both;
+}
+
+.modal-header { animation-delay: 70ms; }
+.input-group:nth-of-type(1) { animation-delay: 110ms; }
+.input-group:nth-of-type(2) { animation-delay: 145ms; }
+.input-group:nth-of-type(3) { animation-delay: 180ms; }
+.input-group:nth-of-type(4) { animation-delay: 215ms; }
+.preview-box { animation-delay: 240ms; }
+.modal-footer { animation-delay: 270ms; }
 
 .input-group label {
   font-size: 0.75rem;
@@ -224,6 +239,18 @@
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(37, 99, 235, 0.25)) !important;
   border-color: rgba(56, 189, 248, 0.6);
   color: #ffffff;
+  animation: chipSelect var(--dur-quick) var(--ease-emphasized) both;
+}
+
+@keyframes sheetContentIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes chipSelect {
+  0% { transform: scale(0.92); }
+  70% { transform: scale(1.04); }
+  100% { transform: scale(1); }
 }
 
 /* ==========================================

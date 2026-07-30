@@ -185,6 +185,16 @@
   transform: scale(0.98);
 }
 
+@media (hover: hover) {
+  .transaction-card:hover {
+    transform: translateY(-3px);
+  }
+
+  .transaction-card:hover app-bubble {
+    filter: brightness(1.08);
+  }
+}
+
 .card-inner {
   display: flex;
   justify-content: space-between;
