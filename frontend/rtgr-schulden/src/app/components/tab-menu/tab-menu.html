@@ -1,7 +1,12 @@
 <nav class="mobile-tab-nav" aria-label="Hauptnavigation">
   <app-bubble width="100%" height="72px">
-    <div class="tab-container" role="tablist">
-      <button
+  <div
+    class="tab-container"
+    role="tablist"
+    [style.--active-tab-index]="activeTabIndex"
+  >
+    <div class="active-glow-pill" aria-hidden="true"></div>
+    <button
         *ngFor="let tab of tabs"
         type="button"
         class="tab-item"
@@ -10,9 +15,6 @@
         [attr.aria-selected]="tab.id === activeTabId"
         (click)="selectTab(tab.id)"
       >
-        <!-- Schwebender Glow-Backdrop hinter dem aktiven Item -->
-        <div class="active-glow-pill" *ngIf="tab.id === activeTabId"></div>
-
         <!-- SVG Icon -->
         <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path [attr.d]="tab.iconPath" />

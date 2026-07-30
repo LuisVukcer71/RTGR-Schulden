@@ -28,3 +28,23 @@
     0 6px 24px rgba(0, 0, 0, 0.6),
     0 0 20px rgba(0, 98, 255, 0.15);
 }
+
+/* Der obere Screen-Chrome ist eine ruhige, durchlässige Werkzeugleiste,
+   keine weitere Karte. Dadurch verschwindet der harte schwarze Rahmen um
+   die Navigation, während Inhaltskarten ihr Material behalten. */
+:host-context(.scroll-header-group) .bubble-container {
+  background: transparent !important;
+  border-color: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+
+:host-context(.scroll-header-group) .bubble-container::before {
+  display: none;
+}
+
+:host-context(.scroll-header-group) .bubble-container:hover {
+  border-color: transparent;
+  box-shadow: none;
+}

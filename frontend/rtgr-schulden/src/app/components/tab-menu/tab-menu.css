@@ -89,10 +89,9 @@ app-bubble {
 
 .active-glow-pill {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 82%;
+  top: 9%;
+  left: calc(0.5rem + ((100% - 1rem) / 3) * var(--active-tab-index));
+  width: calc((100% - 1rem) / 3);
   height: 82%;
   background: rgba(37, 99, 235, 0.12);
   border-radius: 12px;
@@ -100,16 +99,8 @@ app-bubble {
   box-shadow: 0 0 12px rgba(37, 99, 235, 0.2);
   z-index: -1;
   pointer-events: none;
-  animation: pillScale var(--dur-quick) var(--ease) both;
-}
-
-@keyframes pillScale {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.8);
-  }
-  100% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
+  transform: scaleX(0.82);
+  transform-origin: center;
+  view-transition-name: active-tab-indicator;
+  transition: left var(--dur-slow) var(--ease-emphasized);
 }

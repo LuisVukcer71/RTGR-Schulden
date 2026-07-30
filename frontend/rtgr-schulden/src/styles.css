@@ -97,6 +97,23 @@ html[data-nav-direction="backward"]::view-transition-new(root) {
   animation: pushInFromLeft var(--dur-slow) var(--ease-emphasized) both;
 }
 
+/* Die untere Navigation ist ein dauerhaftes Bedienelement. Der Seiteninhalt
+   darf wischen; die Dock bleibt stehen und nur ihr eigener Indikator bewegt
+   sich an die neue Position. */
+::view-transition-old(bottom-navigation),
+::view-transition-new(bottom-navigation) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(bottom-navigation) {
+  opacity: 0;
+}
+
+::view-transition-new(bottom-navigation) {
+  opacity: 1;
+}
+
 @keyframes pushOutLeft {
   to { transform: translateX(-28%); opacity: 0.55; }
 }

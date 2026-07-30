@@ -21,6 +21,12 @@ export class TabMenuComponent {
   @Output() tabChange = new EventEmitter<string>();
   @Output() addClick = new EventEmitter<void>();
 
+  /** Der Indikator bleibt ein einzelnes Element und gleitet zwischen Tabs,
+   * statt beim Wechsel entfernt und am Ziel neu aufgebaut zu werden. */
+  get activeTabIndex(): number {
+    return Math.max(0, this.tabs.findIndex(tab => tab.id === this.activeTabId));
+  }
+
   selectTab(tabId: string): void {
     if (this.activeTabId !== tabId) {
       this.activeTabId = tabId;
