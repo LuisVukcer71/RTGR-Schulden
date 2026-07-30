@@ -16,15 +16,6 @@ export class AusgabenUebersichtComponent implements OnInit {
   activeTab: 'all' | 'owedToMe' | 'iOwe' = 'all';
   statusFilter: 'all' | 'open' | 'paid' = 'all';
 
-  /**
-   * IDs, für die gerade (durch eine "confirm"-Aktion in dieser Sitzung)
-   * der Partikel-Burst laufen soll. Bewusst getrennt von item.isPaid:
-   * isPaid bleibt dauerhaft true, dieses Flag ist nur ein kurzes,
-   * selbstlöschendes Trigger-Signal, damit der Burst nicht bei jedem
-   * Neuladen für bereits bezahlte Posten mit abfeuert.
-   */
-  justSettledIds = new Set<string>();
-
   private cdr = inject(ChangeDetectorRef);
 
   // Nicht mehr hartcodiert: kommt jetzt live über den TransactionService,
@@ -122,15 +113,6 @@ export class AusgabenUebersichtComponent implements OnInit {
     };
 
     Object.assign(item, optimisticChanges);
-
-    if (action === 'confirm') {
-      this.justSettledIds.add(item.id);
-      setTimeout(() => {
-        this.justSettledIds.delete(item.id);
-        this.cdr.detectChanges();
-      }, 900);
-    }
-
     this.cdr.detectChanges();
 
     const call$ =

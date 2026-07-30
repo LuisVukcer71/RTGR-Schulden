@@ -5,8 +5,7 @@
    Verschwindet sauber bei minimalem Scroll (schon ab 1px) - binäre
    .is-scrolled-Klasse auf <html> (ScrollStateService) + reine
    CSS-Transition, statt kontinuierlich per JS bei jedem Scroll-Event
-   nachgeführt zu werden. Läuft dadurch immer flüssig/compositor-getrieben,
-   unabhängig davon wie unregelmäßig der Browser Scroll-Events feuert.
+   nachgeführt zu werden.
    ========================================== */
 .saldo-hero {
   position: relative;
@@ -18,12 +17,11 @@
   opacity: 1;
   transform: translateY(0);
   overflow: hidden;
-  transition: opacity var(--dur-fast) var(--ease-standard),
-              transform var(--dur-fast) var(--ease-standard),
-              max-height var(--dur-fast) var(--ease-standard),
-              padding var(--dur-fast) var(--ease-standard);
-  animation: slideDownHero var(--dur-slow) var(--ease-spring) backwards;
-  animation-delay: 0.05s;
+  transition: opacity var(--dur-normal) var(--ease),
+              transform var(--dur-normal) var(--ease),
+              max-height var(--dur-normal) var(--ease),
+              padding var(--dur-normal) var(--ease);
+  animation: contentIn var(--dur-normal) var(--ease) both;
 }
 
 html.is-scrolled .saldo-hero {
@@ -51,11 +49,7 @@ html.is-scrolled .saldo-hero {
   letter-spacing: -0.04em;
   line-height: 1;
   text-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
-  transition: color var(--dur-base) var(--ease-standard), transform var(--dur-base) var(--ease-spring);
-}
-
-.saldo-display:hover {
-  transform: scale(1.05);
+  transition: color var(--dur-normal) var(--ease);
 }
 
 /* ==========================================
@@ -75,8 +69,7 @@ html.is-scrolled .saldo-hero {
   border: 1px solid rgba(16, 185, 129, 0.3);
   padding: 2px 6px;
   border-radius: 6px;
-  animation: popInBadge var(--dur-base) var(--ease-spring) both;
-  animation-delay: 0.15s;
+  animation: contentIn var(--dur-normal) var(--ease) both;
 }
 
 .paid-badge.pending-badge {
@@ -98,6 +91,11 @@ html.is-scrolled .saldo-hero {
 
 /* ==========================================
    3. QUICK SETTLE BUTTON
+   Der eine bewusst "auffälligere" Moment der App: eine Schuld final zu
+   bestätigen bekommt spürbares, aber knappes Feedback - ein Gewicht, das
+   sich einmal setzt (leichtes Überschwingen auf 1.08, dann fest), kein
+   Feuerwerk. Der Bestätigungs-Puls (pending-theirs) ist funktional, kein
+   Schmuck: er zeigt "hier wartet etwas auf dich".
    ========================================== */
 .settle-btn {
   appearance: none;
@@ -111,9 +109,9 @@ html.is-scrolled .saldo-hero {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease-standard),
-              background-color var(--dur-fast) var(--ease-standard),
-              transform var(--dur-fast) var(--ease-spring);
+  transition: border-color var(--dur-normal) var(--ease),
+              background-color var(--dur-normal) var(--ease),
+              transform var(--dur-quick) var(--ease);
   padding: 0;
   outline: none;
   position: relative;
@@ -122,25 +120,23 @@ html.is-scrolled .saldo-hero {
 .settle-btn:hover {
   border-color: #10b981;
   background: rgba(16, 185, 129, 0.1);
-  transform: scale(1.1);
 }
 
 .settle-btn:active {
-  transform: scale(0.9);
-  transition-duration: var(--dur-instant);
+  transform: scale(0.96);
 }
 
 .settle-btn svg {
   width: 16px;
   height: 16px;
   stroke: transparent;
-  transition: stroke var(--dur-fast) var(--ease-standard);
+  transition: stroke var(--dur-normal) var(--ease);
 }
 
 .settle-btn svg polyline {
   stroke-dasharray: 24;
   stroke-dashoffset: 24;
-  transition: stroke-dashoffset var(--dur-base) var(--ease-spring);
+  transition: stroke-dashoffset var(--dur-normal) var(--ease-emphasized);
 }
 
 .settle-btn:hover svg {
@@ -150,7 +146,7 @@ html.is-scrolled .saldo-hero {
 .settle-btn.checked {
   background: #10b981;
   border-color: #10b981;
-  animation: checkPop var(--dur-base) var(--ease-spring) forwards;
+  animation: settleWeight var(--dur-normal) var(--ease-emphasized) forwards;
 }
 
 .settle-btn.checked svg {
@@ -159,7 +155,7 @@ html.is-scrolled .saldo-hero {
 
 .settle-btn.checked svg polyline {
   stroke-dashoffset: 0;
-  transition-delay: 0.12s;
+  transition-delay: 0.1s;
 }
 
 .settle-btn.pending-mine {
@@ -187,7 +183,7 @@ html.is-scrolled .saldo-hero {
 .settle-btn.pending-theirs {
   border-color: #38bdf8;
   background: rgba(56, 189, 248, 0.15);
-  animation: pulseConfirm 1.4s infinite var(--ease-in-out);
+  animation: pulseConfirm 2.2s infinite var(--ease);
 }
 
 .settle-btn.pending-theirs svg {
@@ -197,65 +193,18 @@ html.is-scrolled .saldo-hero {
 
 .settle-btn.pending-theirs:hover {
   background: rgba(56, 189, 248, 0.3);
-  transform: scale(1.1);
-}
-
-/* ==========================================
-   PARTIKEL-BURST beim Bestätigen ("confirm") - kurzer, selbstlöschender
-   Feiermoment statt nur einem Häkchen-Draw.
-   ========================================== */
-.burst {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.burst-particle {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 6px rgba(16, 185, 129, 0.8);
-  transform: translate(-50%, -50%);
-  animation: burstOut 0.6s var(--ease-out) both;
-  animation-delay: calc(var(--i) * 15ms);
-}
-
-@keyframes burstOut {
-  0% {
-    opacity: 1;
-    transform: translate(-50%, -50%) rotate(calc(var(--i) * 60deg)) translateY(0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) rotate(calc(var(--i) * 60deg)) translateY(-22px) scale(0.2);
-  }
 }
 
 /* ==========================================
    4. KEYFRAMES (bildschirmspezifisch)
    ========================================== */
-@keyframes slideDownHero {
-  from { opacity: 0; transform: translateY(-15px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes popInBadge {
-  0% { opacity: 0; transform: scale(0.6) translateY(4px); }
-  60% { transform: scale(1.08); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-@keyframes checkPop {
+@keyframes settleWeight {
   0% { transform: scale(1); }
-  40% { transform: scale(1.3); box-shadow: 0 0 20px rgba(16, 185, 129, 0.7); }
-  100% { transform: scale(1); box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+  45% { transform: scale(1.08); }
+  100% { transform: scale(1); }
 }
 
 @keyframes pulseConfirm {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.5); }
-  50% { box-shadow: 0 0 0 8px rgba(56, 189, 248, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.45); }
+  50% { box-shadow: 0 0 0 7px rgba(56, 189, 248, 0); }
 }

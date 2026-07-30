@@ -45,8 +45,7 @@ app-bubble {
   cursor: pointer;
   flex: 1;
   z-index: 1;
-  /* Optimierte Transition für direktes Feedback */
-  transition: transform var(--dur-instant) var(--ease-spring), color var(--dur-fast) var(--ease-standard);
+  transition: transform var(--dur-quick) var(--ease), color var(--dur-normal) var(--ease);
 }
 
 .tab-item:focus,
@@ -58,19 +57,18 @@ app-bubble {
 }
 
 .tab-item:active {
-  transform: scale(0.9);
-  transition-duration: var(--dur-instant);
+  transform: scale(0.94);
 }
 
 .tab-icon {
   width: 22px;
   height: 22px;
   background: transparent !important;
-  transition: stroke var(--dur-base) var(--ease-standard), transform var(--dur-base) var(--ease-spring);
+  transition: stroke var(--dur-normal) var(--ease), transform var(--dur-normal) var(--ease);
 }
 
 .tab-label {
-  transition: color var(--dur-fast) var(--ease-standard), font-weight var(--dur-fast) var(--ease-standard);
+  transition: color var(--dur-normal) var(--ease), font-weight var(--dur-normal) var(--ease);
   letter-spacing: -0.01em;
   background: transparent !important;
 }
@@ -102,8 +100,7 @@ app-bubble {
   box-shadow: 0 0 12px rgba(37, 99, 235, 0.2);
   z-index: -1;
   pointer-events: none;
-  /* Schnösellose, knackige Pill-Animation */
-  animation: pillScale var(--dur-fast) var(--ease-spring) both;
+  animation: pillScale var(--dur-quick) var(--ease) both;
 }
 
 @keyframes pillScale {

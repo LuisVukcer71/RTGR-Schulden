@@ -22,25 +22,26 @@ body {
 }
 
 /* ==========================================
-   MOTION-DESIGN-TOKENS
-   Eine Quelle der Wahrheit für Timing/Easing der gesamten App. Custom
-   Properties vererben sich (anders als Regeln) durch Angulars
-   Style-Encapsulation hindurch - jede Komponente kann var(--ease-out) etc.
-   nutzen, ohne shared-screen.css importieren zu müssen.
+   MOTION-SYSTEM
+   Bewusst radikal minimal gehalten: genau zwei Kurven, genau drei Dauern
+   für die komplette App. Ein System mit zu vielen Stellschrauben ist kein
+   System mehr, sondern eine Sammlung von Einzelentscheidungen, die
+   zwangsläufig auseinanderdriften. Beide Kurven schwingen bewusst NICHT
+   über 100% hinaus - das ist der Kern des Unterschieds zu vorher: iOS
+   überschwingt bei UI-Chrome praktisch nie, Bewegung wirkt entschieden
+   und schwer statt verspielt.
    ========================================== */
 :root {
-  /* Dauer */
-  --dur-instant: 120ms;
-  --dur-fast: 200ms;
-  --dur-base: 320ms;
-  --dur-slow: 450ms;
-  --dur-hero: 600ms;
+  /* --ease: Standard-Kurve für Fades, Farb-/Zustandswechsel. */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  /* --ease-emphasized: Apples eigene Sheet-Kurve (UIKit) - schneller
+     Start, weiches, überschwingfreies Einrasten. Für alles, was
+     "präsentiert" wird: Modals, Seitenübergänge. */
+  --ease-emphasized: cubic-bezier(0.32, 0.72, 0, 1);
 
-  /* Kurven */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);     /* Content-Entrance, "settled" - Apple-typisches Ease-Out */
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* Federnde Pops: Toggles, Badges, aktive Zustände */
-  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* Einfache Hover-/Farb-Übergänge */
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* Symmetrisch: Modals/Sheets rein & raus */
+  --dur-quick: 180ms;   /* Unmittelbares Feedback: Press-States, Toggles */
+  --dur-normal: 300ms;  /* Standard-Übergänge: Ein-/Ausblenden, Listen */
+  --dur-slow: 420ms;    /* Sheets, Seitenübergänge */
 }
 
 /* Reduced-Motion: System-Einstellung respektieren statt Animationen aufzudrängen. */
@@ -55,61 +56,61 @@ body {
 
 /* ==========================================
    VIEW TRANSITIONS - echte Seitenübergänge bei jeder Routen-Navigation.
-   Läuft nativ im Browser (kein JS, keine Angular-Animations-Library
-   nötig), Browser ohne Unterstützung navigieren einfach ohne Übergang
-   weiter.
+   Läuft nativ im Browser, kein JS/Animations-Library nötig. Browser ohne
+   Unterstützung navigieren einfach ohne Übergang weiter.
 
-   Zwei Fälle:
-   1. Tab-Wechsel (Schulden/Freunde/Profil) - gerichtetes Swipe, Richtung
-      kommt per [data-nav-direction] von app.config.ts (onViewTransitionCreated).
-   2. Alles andere (z.B. Login <-> Dashboard) - schlichte, klare Überblendung.
+   Tab-Wechsel bekommen echte Parallaxe statt einem reinen 1:1-Austausch:
+   die verlassende Seite bewegt sich nur zu einem Bruchteil und dunkelt
+   ab, während die neue Seite vollständig darüberzieht - wie beim Push/Pop
+   eines UINavigationController, nicht wie ein flacher Folienwechsel.
+   Richtung kommt per [data-nav-direction] von app.config.ts.
    ========================================== */
 ::view-transition-old(root) {
-  animation: viewFadeOut var(--dur-fast) var(--ease-standard) both;
+  animation: fadeOut var(--dur-normal) var(--ease) both;
 }
 
 ::view-transition-new(root) {
-  animation: viewFadeIn var(--dur-fast) var(--ease-standard) both;
+  animation: fadeIn var(--dur-normal) var(--ease) both;
 }
 
-@keyframes viewFadeOut {
+@keyframes fadeOut {
   to { opacity: 0; }
 }
 
-@keyframes viewFadeIn {
+@keyframes fadeIn {
   from { opacity: 0; }
 }
 
 html[data-nav-direction="forward"]::view-transition-old(root) {
-  animation: viewSwipeOutLeft var(--dur-base) var(--ease-out) both;
+  animation: pushOutLeft var(--dur-slow) var(--ease-emphasized) both;
 }
 
 html[data-nav-direction="forward"]::view-transition-new(root) {
-  animation: viewSwipeInFromRight var(--dur-base) var(--ease-out) both;
+  animation: pushInFromRight var(--dur-slow) var(--ease-emphasized) both;
 }
 
 html[data-nav-direction="backward"]::view-transition-old(root) {
-  animation: viewSwipeOutRight var(--dur-base) var(--ease-out) both;
+  animation: pushOutRight var(--dur-slow) var(--ease-emphasized) both;
 }
 
 html[data-nav-direction="backward"]::view-transition-new(root) {
-  animation: viewSwipeInFromLeft var(--dur-base) var(--ease-out) both;
+  animation: pushInFromLeft var(--dur-slow) var(--ease-emphasized) both;
 }
 
-@keyframes viewSwipeOutLeft {
-  to { transform: translateX(-100%); }
+@keyframes pushOutLeft {
+  to { transform: translateX(-28%); opacity: 0.55; }
 }
 
-@keyframes viewSwipeInFromRight {
+@keyframes pushInFromRight {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
 }
 
-@keyframes viewSwipeOutRight {
-  to { transform: translateX(100%); }
+@keyframes pushOutRight {
+  to { transform: translateX(28%); opacity: 0.55; }
 }
 
-@keyframes viewSwipeInFromLeft {
+@keyframes pushInFromLeft {
   from { transform: translateX(-100%); }
   to { transform: translateX(0); }
 }

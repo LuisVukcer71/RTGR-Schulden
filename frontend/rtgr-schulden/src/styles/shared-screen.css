@@ -2,19 +2,15 @@
    GEMEINSAME SCREEN-CHROME
    Einmal gepflegt, per @import in jedes Screen-Component eingebunden
    (ausgaben-uebersicht, friends, profile). Der Lichtkegel-Hintergrund
-   lebt bewusst NICHT hier, sondern einmalig im Dashboard-Shell
-   (dashboard.html/css), damit er beim Tab-Wechsel nicht jedes Mal
-   neu ins DOM gehängt wird und seine "infinite"-Animationen neu starten.
+   lebt bewusst NICHT hier, sondern einmalig im Dashboard-Shell, damit er
+   beim Tab-Wechsel nicht jedes Mal neu ins DOM gehängt wird.
 
-   Timing/Easing kommt aus den globalen Motion-Tokens (styles.css:root),
-   damit alle Screens exakt dieselbe Bewegungssprache sprechen.
+   Timing/Easing kommt ausschließlich aus den globalen Motion-Tokens
+   (styles.css:root) - genau zwei Kurven, genau drei Dauern für die
+   gesamte App.
    ========================================== */
 
 .app-viewport {
-  /* Kein eigenes Entrance mehr: die View-Transitions-API (styles.css)
-     übernimmt jetzt den Seitenübergang beim Routenwechsel global - ein
-     zusätzliches lokales Fade-in hier würde sich mit dem Seitenmorph
-     überlagern. */
   position: relative;
   display: flex;
   flex-direction: column;
@@ -32,9 +28,8 @@
 /* ==========================================
    NAV-BAR (STICKY HEADER GROUP)
    Echte, statische Full-Width-Leiste (bricht bewusst aus der 400px-Spalte
-   von .app-viewport aus) - fix oben, keine Scroll-Kopplung, kein Wachsen.
-   Der Inhalt bleibt trotzdem auf die App-Spalte zentriert (siehe
-   .scroll-header-content).
+   von .app-viewport aus) - fix oben, keine Scroll-Kopplung. Reines
+   Chrome bekommt keine Mount-Animation, nur tatsächlicher Inhalt tut das.
    ========================================== */
 .scroll-header-group {
   position: sticky;
@@ -49,8 +44,6 @@
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  animation: popIn var(--dur-slow) var(--ease-spring) backwards;
-  animation-delay: 0.1s;
 }
 
 .scroll-header-content {
@@ -89,7 +82,7 @@
   border: 1px solid transparent;
   color: #94a3b8;
   cursor: pointer;
-  transition: color var(--dur-base) var(--ease-spring), transform var(--dur-instant) var(--ease-spring);
+  transition: color var(--dur-normal) var(--ease), transform var(--dur-quick) var(--ease);
   outline: none;
 }
 
@@ -101,8 +94,7 @@
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
   border: 1px solid transparent;
   opacity: 0;
-  transform: scale(0.85) translateY(4px);
-  transition: opacity var(--dur-base) var(--ease-spring), transform var(--dur-base) var(--ease-spring), border-color var(--dur-base) var(--ease-standard), box-shadow var(--dur-base) var(--ease-standard);
+  transition: opacity var(--dur-normal) var(--ease), border-color var(--dur-normal) var(--ease), box-shadow var(--dur-normal) var(--ease);
   z-index: -1;
 }
 
@@ -112,37 +104,24 @@
 
 .segment-btn.active::before {
   opacity: 1;
-  transform: scale(1) translateY(0);
   border-color: rgba(59, 130, 246, 0.6);
   box-shadow: 0 4px 20px rgba(37, 99, 235, 0.25);
-}
-
-.segment-btn span {
-  font-size: 0.7rem;
-  font-weight: 600;
-  transition: transform var(--dur-base) var(--ease-spring);
 }
 
 .segment-icon {
   width: 18px;
   height: 18px;
   stroke: #64748b;
-  transition: stroke var(--dur-base) var(--ease-standard), transform var(--dur-base) var(--ease-spring), filter var(--dur-base) var(--ease-standard);
+  transition: stroke var(--dur-normal) var(--ease), filter var(--dur-normal) var(--ease);
 }
 
 .segment-btn.active .segment-icon {
   stroke: #38bdf8;
-  transform: translateY(-2px);
   filter: drop-shadow(0 2px 6px rgba(56, 189, 248, 0.5));
 }
 
-.segment-btn.active span {
-  transform: translateY(-1px);
-}
-
 .segment-btn:active {
-  transform: scale(0.94);
-  transition-duration: var(--dur-instant);
+  transform: scale(0.96);
 }
 
 /* ==========================================
@@ -167,27 +146,26 @@
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background var(--dur-base) var(--ease-spring), border-color var(--dur-base) var(--ease-spring), color var(--dur-fast) var(--ease-standard), box-shadow var(--dur-base) var(--ease-spring), transform var(--dur-fast) var(--ease-spring);
+  transition: background var(--dur-normal) var(--ease), border-color var(--dur-normal) var(--ease), color var(--dur-normal) var(--ease), transform var(--dur-quick) var(--ease);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   outline: none;
 }
 
 .filter-pill:active {
-  transform: scale(0.9);
-  transition-duration: var(--dur-instant);
+  transform: scale(0.96);
 }
 
 .filter-pill.active {
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(37, 99, 235, 0.25));
   border-color: rgba(56, 189, 248, 0.6);
   color: #ffffff;
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
-  transform: scale(1.05);
 }
 
 /* ==========================================
    CARDS & LISTEN
+   Ein einziges, schlichtes Entrance (contentIn) für jeden Inhalt - kein
+   Blur, kein Überschwingen, knapper Versatz. Zurückhaltung statt Effekt.
    ========================================== */
 .transactions-section {
   position: relative;
@@ -198,14 +176,11 @@
 
 .transaction-card {
   margin-bottom: 0.75rem;
-  opacity: 1;
-  transition: filter var(--dur-base) var(--ease-standard), opacity var(--dur-base) var(--ease-standard), transform var(--dur-fast) var(--ease-spring);
-  will-change: transform, opacity, filter;
+  transition: opacity var(--dur-normal) var(--ease), transform var(--dur-quick) var(--ease);
 }
 
 .transaction-card:active {
-  transform: scale(0.97);
-  transition-duration: var(--dur-instant);
+  transform: scale(0.98);
 }
 
 .card-inner {
@@ -214,17 +189,14 @@
   align-items: center;
   padding: 1rem 1.15rem;
   width: 100%;
-  animation: cardEntrance var(--dur-base) var(--ease-out) both;
+  animation: contentIn var(--dur-normal) var(--ease) both;
 }
 
-.transaction-card:nth-child(1) .card-inner { animation-delay: 0.05s; }
-.transaction-card:nth-child(2) .card-inner { animation-delay: 0.10s; }
-.transaction-card:nth-child(3) .card-inner { animation-delay: 0.15s; }
-.transaction-card:nth-child(4) .card-inner { animation-delay: 0.20s; }
-.transaction-card:nth-child(5) .card-inner { animation-delay: 0.25s; }
-.transaction-card:nth-child(6) .card-inner { animation-delay: 0.30s; }
-.transaction-card:nth-child(7) .card-inner { animation-delay: 0.35s; }
-.transaction-card:nth-child(n+8) .card-inner { animation-delay: 0.40s; }
+.transaction-card:nth-child(1) .card-inner { animation-delay: 20ms; }
+.transaction-card:nth-child(2) .card-inner { animation-delay: 40ms; }
+.transaction-card:nth-child(3) .card-inner { animation-delay: 60ms; }
+.transaction-card:nth-child(4) .card-inner { animation-delay: 80ms; }
+.transaction-card:nth-child(n+5) .card-inner { animation-delay: 100ms; }
 
 .card-info {
   display: flex;
@@ -260,7 +232,7 @@
   font-size: 1.05rem;
   font-weight: 800;
   letter-spacing: -0.01em;
-  transition: color var(--dur-base) var(--ease-standard);
+  transition: color var(--dur-normal) var(--ease);
 }
 
 .empty-state {
@@ -269,7 +241,7 @@
   color: #94a3b8;
   font-size: 0.875rem;
   font-weight: 500;
-  animation: floatEmpty 4s infinite var(--ease-in-out), appFadeIn var(--dur-slow) var(--ease-out) both;
+  animation: contentIn var(--dur-normal) var(--ease) both;
 }
 
 /* ==========================================
@@ -281,7 +253,7 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  animation: cardEntrance var(--dur-base) var(--ease-out) both;
+  animation: contentIn var(--dur-normal) var(--ease) both;
 }
 
 .info-card-header {
@@ -340,32 +312,12 @@
 .is-negative { color: #f43f5e; }
 
 /* ==========================================
-   KEYFRAMES
+   DIE EINE ENTRANCE-KEYFRAME
+   Ersetzt drei frühere, leicht unterschiedliche Varianten (appFadeIn,
+   popIn, cardEntrance). Ein System hat eine Antwort auf "wie taucht
+   Inhalt auf", nicht drei.
    ========================================== */
-@keyframes appFadeIn {
-  from { opacity: 0; filter: blur(6px); transform: scale(0.99); }
-  to { opacity: 1; filter: blur(0); transform: scale(1); }
-}
-
-@keyframes popIn {
-  0% { opacity: 0; transform: scale(0.92) translateY(8px); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-@keyframes cardEntrance {
-  0% {
-    opacity: 0;
-    transform: translateY(12px) scale(0.97);
-    filter: blur(3px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
-  }
-}
-
-@keyframes floatEmpty {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+@keyframes contentIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }

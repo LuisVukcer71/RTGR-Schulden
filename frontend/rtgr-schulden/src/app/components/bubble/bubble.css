@@ -7,7 +7,7 @@
     0 0 15px rgba(0, 98, 255, 0.08);
   color: #ffffff;
   box-sizing: border-box;
-  transition: border-color var(--dur-base) var(--ease-standard), box-shadow var(--dur-base) var(--ease-standard);
+  transition: border-color var(--dur-normal) var(--ease), box-shadow var(--dur-normal) var(--ease);
   position: relative;
   overflow: hidden;
 }

@@ -34,7 +34,7 @@ export class AddBillComponent implements OnInit {
 
   /** Spielt die Schließen-Animation ab, bevor die Component tatsächlich entfernt wird. */
   isClosing: boolean = false;
-  private readonly closeAnimationMs = 320; // deckt sich mit --dur-base in styles.css
+  private readonly closeAnimationMs = 300; // deckt sich mit --dur-normal in styles.css
 
   ngOnInit(): void {
     this.loadRegisteredFriends();

@@ -1,4 +1,4 @@
-<div class="light-cone-wrapper" [class.mood-positive]="balanceMood === 'positive'" [class.mood-negative]="balanceMood === 'negative'">
+<div class="light-cone-wrapper">
   <div class="light-edge-line"></div>
   <div class="light-cone-main"></div>
   <div class="light-cone-ambient"></div>
@@ -7,29 +7,32 @@
 <div class="dashboard-wrapper">
   <app-add-bill *ngIf="isAddBillModalOpen" (close)="closeAddBillModal()"></app-add-bill>
 
-  <main class="content-area">
-    <router-outlet></router-outlet>
-  </main>
+  <!-- Weicht sichtbar zurück, solange die Rechnungs-Sheet offen ist. -->
+  <div class="content-layer" [class.receding]="isAddBillModalOpen">
+    <main class="content-area">
+      <router-outlet></router-outlet>
+    </main>
 
-  <!-- UNTERE NAVIGATION CONTAINER -->
-  <div class="bottom-nav-container">
-    <div class="dock-wrapper">
-      
-      <app-tab-menu 
-        [tabs]="navTabs" 
-        [activeTabId]="activeTab" 
-        (tabChange)="onTabChanged($event)"
-      ></app-tab-menu>
+    <!-- UNTERE NAVIGATION CONTAINER -->
+    <div class="bottom-nav-container">
+      <div class="dock-wrapper">
 
-      <div class="center-glow-halo"></div>
+        <app-tab-menu
+          [tabs]="navTabs"
+          [activeTabId]="activeTab"
+          (tabChange)="onTabChanged($event)"
+        ></app-tab-menu>
 
-      <button class="fab-center-btn" (click)="openAddBillModal()" aria-label="Neue Rechnung hinzufügen" type="button">
-        <svg class="plus-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-      </button>
+        <div class="center-glow-halo"></div>
 
+        <button class="fab-center-btn" (click)="openAddBillModal()" aria-label="Neue Rechnung hinzufügen" type="button">
+          <svg class="plus-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+
+      </div>
     </div>
   </div>
 </div>

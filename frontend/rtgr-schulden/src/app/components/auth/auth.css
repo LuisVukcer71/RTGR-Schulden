@@ -62,7 +62,7 @@ input {
   color: #ffffff;
   font-size: 0.95rem;
   outline: none;
-  transition: border-color var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard);
+  transition: border-color var(--dur-normal) var(--ease), box-shadow var(--dur-normal) var(--ease);
 }
 
 input::placeholder {
@@ -92,7 +92,7 @@ input.invalid:focus {
   font-size: 0.75rem;
   color: #f87171;
   padding-left: 2px;
-  animation: fieldErrorIn var(--dur-fast) var(--ease-out) both;
+  animation: fadeSlideIn var(--dur-normal) var(--ease) both;
 }
 
 /* ==========================================
@@ -114,12 +114,11 @@ input.invalid:focus {
   font-weight: 500;
   cursor: pointer;
   outline: none;
-  transition: color var(--dur-fast) var(--ease-standard);
+  transition: color var(--dur-normal) var(--ease);
 }
 
 .remember-me-row:active {
   transform: scale(0.98);
-  transition-duration: var(--dur-instant);
 }
 
 .remember-me-row:disabled {
@@ -137,7 +136,7 @@ input.invalid:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color var(--dur-base) var(--ease-spring), border-color var(--dur-base) var(--ease-spring);
+  transition: background-color var(--dur-normal) var(--ease), border-color var(--dur-normal) var(--ease);
 }
 
 .checkbox-box svg {
@@ -146,25 +145,18 @@ input.invalid:focus {
   stroke: transparent;
   stroke-dasharray: 24;
   stroke-dashoffset: 24;
-  transition: stroke-dashoffset var(--dur-base) var(--ease-spring);
+  transition: stroke-dashoffset var(--dur-normal) var(--ease-emphasized);
 }
 
 .checkbox-box.checked {
   background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
   border-color: transparent;
-  animation: checkboxPop var(--dur-base) var(--ease-spring);
 }
 
 .checkbox-box.checked svg {
   stroke: #ffffff;
   stroke-dashoffset: 0;
-  transition-delay: 0.08s;
-}
-
-@keyframes checkboxPop {
-  0% { transform: scale(1); }
-  40% { transform: scale(1.18); }
-  100% { transform: scale(1); }
+  transition-delay: 0.06s;
 }
 
 /* ==========================================
@@ -179,16 +171,16 @@ input.invalid:focus {
   border-radius: 50%;
   margin-right: 0.5rem;
   vertical-align: -2px;
-  animation: btnSpin 0.7s linear infinite, spinnerPopIn var(--dur-fast) var(--ease-spring) both;
+  animation: btnSpin 0.7s linear infinite, fadeIn var(--dur-quick) var(--ease) both;
 }
 
 @keyframes btnSpin {
   to { transform: rotate(360deg); }
 }
 
-@keyframes spinnerPopIn {
-  from { transform: scale(0); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* Haupt-Button: Kompakter & passend zu den Inputs */
@@ -206,7 +198,7 @@ input.invalid:focus {
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--dur-fast) var(--ease-standard), transform var(--dur-instant) var(--ease-spring);
+  transition: background-color var(--dur-normal) var(--ease), transform var(--dur-quick) var(--ease);
 }
 
 .btn-primary:hover {
@@ -240,7 +232,7 @@ input.invalid:focus {
   margin-left: 0.3rem;
   padding: 0;
   font-size: 0.85rem;
-  transition: color var(--dur-fast) var(--ease-standard);
+  transition: color var(--dur-normal) var(--ease);
 }
 
 .btn-link:hover {
@@ -250,7 +242,6 @@ input.invalid:focus {
 
 .btn-link:active {
   transform: scale(0.96);
-  display: inline-block;
 }
 
 .btn-link:disabled {
@@ -264,7 +255,7 @@ input.invalid:focus {
   font-size: 0.85rem;
   margin: -0.5rem 0 1rem 0;
   text-align: center;
-  animation: msgShakeIn var(--dur-slow) var(--ease-spring) both;
+  animation: shakeIn var(--dur-slow) var(--ease) both;
 }
 
 .msg-success {
@@ -272,17 +263,18 @@ input.invalid:focus {
   font-size: 0.85rem;
   margin: -0.5rem 0 1rem 0;
   text-align: center;
-  animation: fieldErrorIn var(--dur-base) var(--ease-out) both;
+  animation: fadeSlideIn var(--dur-normal) var(--ease) both;
 }
 
-@keyframes fieldErrorIn {
+@keyframes fadeSlideIn {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 /* Dezentes "Kopfschütteln" für Fehlermeldungen - lenkt kurz Aufmerksamkeit
-   auf sich, ohne aufdringlich zu wirken (klassisches iOS-Feedback-Muster). */
-@keyframes msgShakeIn {
+   auf sich, ohne aufdringlich zu wirken (klassisches iOS-Feedback-Muster
+   für falsche Passcode-Eingaben). */
+@keyframes shakeIn {
   0% { opacity: 0; transform: translateY(-4px); }
   40% { opacity: 1; transform: translateX(-4px) translateY(0); }
   60% { transform: translateX(3px); }
