@@ -60,6 +60,15 @@ body.modal-open {
   }
 }
 
+/* Persönliche Einstellung im Profil – ergänzt die Systemvorgabe. */
+html.app-reduce-motion *,
+html.app-reduce-motion *::before,
+html.app-reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
 /* ==========================================
    VIEW TRANSITIONS - echte Seitenübergänge bei jeder Routen-Navigation.
    Läuft nativ im Browser, kein JS/Animations-Library nötig. Browser ohne

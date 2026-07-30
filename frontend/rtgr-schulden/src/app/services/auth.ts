@@ -77,4 +77,38 @@ export class AuthService {
   getUsers(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/users`);
   }
+
+  getProfile(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/profile`);
+  }
+
+  updateProfile(payload: { username?: string; preferredCurrency?: string; reduceMotion?: boolean }): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/profile`, payload).pipe(
+      tap(response => this.refreshSession(response.token, response.user))
+    );
+  }
+
+  changePassword(currentPassword: string, newPassword: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/profile/password`, { currentPassword, newPassword }).pipe(
+      tap(response => this.refreshSession(response.token, this.getCurrentUser()))
+    );
+  }
+
+  logoutAll(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/profile/logout-all`, {});
+  }
+
+  deleteAccount(currentPassword: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/profile`, { body: { currentPassword } });
+  }
+
+  exportData(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/profile/export`, { responseType: 'blob' });
+  }
+
+  private refreshSession(token: string, user: unknown): void {
+    if (!token) return;
+    const persist = localStorage.getItem('auth_token') !== null;
+    this.setSession(token, user, persist);
+  }
 }

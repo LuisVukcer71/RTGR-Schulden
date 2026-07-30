@@ -81,9 +81,24 @@ async function initDB() {
       CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(255) NOT NULL UNIQUE,
-        password VARCHAR(255) NOT NULL
+        password VARCHAR(255) NOT NULL,
+        token_version INT NOT NULL DEFAULT 0,
+        preferred_currency VARCHAR(3) NOT NULL DEFAULT 'EUR',
+        reduce_motion TINYINT(1) NOT NULL DEFAULT 0
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
     `);
+
+    for (const column of [
+      "ADD COLUMN token_version INT NOT NULL DEFAULT 0",
+      "ADD COLUMN preferred_currency VARCHAR(3) NOT NULL DEFAULT 'EUR'",
+      "ADD COLUMN reduce_motion TINYINT(1) NOT NULL DEFAULT 0"
+    ]) {
+      try {
+        await connection.query(`ALTER TABLE users ${column}`);
+      } catch (err) {
+        if (err.code !== 'ER_DUP_FIELDNAME') throw err;
+      }
+    }
 
     await connection.query(`
       CREATE TABLE IF NOT EXISTS expenses (
@@ -141,7 +156,7 @@ const authLimiter = rateLimit({
 });
 
 // --- AUTH MIDDLEWARE ---
-function authenticateToken(req, res, next) {
+async function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -149,13 +164,29 @@ function authenticateToken(req, res, next) {
     return res.status(401).json({ error: 'Kein Token vorhanden.' });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, payload) => {
-    if (err) {
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const [users] = await pool.query('SELECT token_version FROM users WHERE id = ?', [payload.userId]);
+    const tokenVersion = payload.tokenVersion ?? 0;
+    if (users.length === 0 || users[0].token_version !== tokenVersion) {
+      return res.status(403).json({ error: 'Sitzung nicht mehr gültig.' });
+    }
+    if (false) {
       return res.status(403).json({ error: 'Ungültiges oder abgelaufenes Token.' });
     }
     req.userId = payload.userId;
     next();
-  });
+  } catch (err) {
+    return res.status(403).json({ error: 'Token ungültig oder abgelaufen.' });
+  }
+}
+
+function createToken(user) {
+  return jwt.sign(
+    { userId: user.id, username: user.username, tokenVersion: user.token_version },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
 }
 
 // --- AUTH ROUTEN ---
@@ -203,7 +234,7 @@ app.post('/api/login', authLimiter, async (req, res) => {
       return res.status(401).json({ error: 'Ungültige Anmeldedaten.' });
     }
 
-    const token = jwt.sign({ userId: user.id, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
+    const token = createToken(user);
 
     res.json({
       token,
@@ -222,6 +253,113 @@ app.get('/api/users', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('Fehler beim Laden der Benutzer:', err);
     res.status(500).json({ error: 'Serverfehler.' });
+  }
+});
+
+// --- PROFILE & ACCOUNT ROUTEN ---
+
+app.get('/api/profile', authenticateToken, async (req, res) => {
+  try {
+    const [users] = await pool.query(
+      'SELECT id, username, preferred_currency AS preferredCurrency, reduce_motion AS reduceMotion FROM users WHERE id = ?',
+      [req.userId]
+    );
+    if (!users.length) return res.status(404).json({ error: 'Profil nicht gefunden.' });
+    res.json({ ...users[0], reduceMotion: Boolean(users[0].reduceMotion) });
+  } catch (err) {
+    res.status(500).json({ error: 'Profil konnte nicht geladen werden.' });
+  }
+});
+
+app.patch('/api/profile', authenticateToken, async (req, res) => {
+  try {
+    const { username, preferredCurrency, reduceMotion } = req.body;
+    const [current] = await pool.query('SELECT * FROM users WHERE id = ?', [req.userId]);
+    if (!current.length) return res.status(404).json({ error: 'Profil nicht gefunden.' });
+
+    const user = current[0];
+    const nextUsername = username === undefined ? user.username : String(username).trim();
+    const nextCurrency = preferredCurrency === undefined ? user.preferred_currency : preferredCurrency;
+    const nextReduceMotion = reduceMotion === undefined ? user.reduce_motion : Boolean(reduceMotion);
+    if (!nextUsername) return res.status(400).json({ error: 'Der Name darf nicht leer sein.' });
+    if (!['EUR', 'USD', 'CHF', 'GBP'].includes(nextCurrency)) return res.status(400).json({ error: 'Ungültige Währung.' });
+
+    const [sameName] = await pool.query('SELECT id FROM users WHERE username = ? AND id != ?', [nextUsername, req.userId]);
+    if (sameName.length) return res.status(400).json({ error: 'Dieser Name ist bereits vergeben.' });
+
+    await pool.query(
+      'UPDATE users SET username = ?, preferred_currency = ?, reduce_motion = ? WHERE id = ?',
+      [nextUsername, nextCurrency, nextReduceMotion, req.userId]
+    );
+    const updatedUser = { ...user, username: nextUsername, preferred_currency: nextCurrency, reduce_motion: nextReduceMotion };
+    res.json({
+      user: { id: user.id, username: nextUsername },
+      preferredCurrency: nextCurrency,
+      reduceMotion: Boolean(nextReduceMotion),
+      token: createToken(updatedUser)
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Profil konnte nicht gespeichert werden.' });
+  }
+});
+
+app.post('/api/profile/password', authLimiter, authenticateToken, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'Bitte gib das aktuelle und ein neues Passwort mit mindestens 6 Zeichen ein.' });
+    }
+    const [users] = await pool.query('SELECT * FROM users WHERE id = ?', [req.userId]);
+    const user = users[0];
+    if (!user || !(await bcrypt.compare(currentPassword, user.password))) {
+      return res.status(400).json({ error: 'Das aktuelle Passwort stimmt nicht.' });
+    }
+    const password = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    await pool.query('UPDATE users SET password = ?, token_version = token_version + 1 WHERE id = ?', [password, req.userId]);
+    const [updated] = await pool.query('SELECT * FROM users WHERE id = ?', [req.userId]);
+    res.json({ message: 'Passwort geändert. Andere Sitzungen wurden abgemeldet.', token: createToken(updated[0]) });
+  } catch (err) {
+    res.status(500).json({ error: 'Passwort konnte nicht geändert werden.' });
+  }
+});
+
+app.post('/api/profile/logout-all', authenticateToken, async (req, res) => {
+  await pool.query('UPDATE users SET token_version = token_version + 1 WHERE id = ?', [req.userId]);
+  res.json({ message: 'Alle Sitzungen wurden abgemeldet.' });
+});
+
+app.get('/api/profile/export', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT e.date, e.title, es.amount, es.is_paid AS isPaid, creditor.username AS creditor, debtor.username AS debtor
+      FROM expense_splits es
+      JOIN expenses e ON es.expense_id = e.id
+      JOIN users creditor ON creditor.id = es.creditor_id
+      JOIN users debtor ON debtor.id = es.debtor_id
+      WHERE es.creditor_id = ? OR es.debtor_id = ? ORDER BY e.id DESC`, [req.userId, req.userId]);
+    const esc = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
+    const csv = ['Datum,Titel,Betrag,Bezahlt,Gläubiger,Schuldner', ...rows.map(row =>
+      [row.date, row.title, Number(row.amount).toFixed(2), row.isPaid ? 'Ja' : 'Nein', row.creditor, row.debtor].map(esc).join(',')
+    )].join('\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="schuldenapp-export.csv"');
+    res.send('\uFEFF' + csv);
+  } catch (err) {
+    res.status(500).json({ error: 'Export konnte nicht erstellt werden.' });
+  }
+});
+
+app.delete('/api/profile', authenticateToken, async (req, res) => {
+  try {
+    const { currentPassword } = req.body;
+    const [users] = await pool.query('SELECT password FROM users WHERE id = ?', [req.userId]);
+    if (!users.length || !(await bcrypt.compare(currentPassword || '', users[0].password))) {
+      return res.status(400).json({ error: 'Passwort ist nicht korrekt.' });
+    }
+    await pool.query('DELETE FROM users WHERE id = ?', [req.userId]);
+    res.json({ message: 'Konto wurde gelöscht.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Konto konnte nicht gelöscht werden.' });
   }
 });
 

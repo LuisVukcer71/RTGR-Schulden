@@ -1,110 +1,17 @@
 @import '../../../styles/shared-screen.css';
 
-/* ==========================================
-   HEADER-TITEL (statt Segmented-Control auf diesem Screen)
-   ========================================== */
-.header-title-box {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0.75rem 0;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #f1f5f9;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.header-icon {
-  width: 20px;
-  height: 20px;
-  stroke: #38bdf8;
-  filter: drop-shadow(0 2px 6px rgba(56, 189, 248, 0.5));
-}
-
-/* ==========================================
-   PROFIL-KARTE
-   ========================================== */
-.profile-card-inner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 1.25rem 1.15rem;
-  width: 100%;
-}
-
-.profile-avatar-large {
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #0ea5e9, #2563eb);
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 1.3rem;
-  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
-  border: 2px solid rgba(56, 189, 248, 0.6);
-}
-
-.profile-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  text-align: left;
-}
-
-.profile-name {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #f1f5f9;
-}
-
-.profile-email {
-  font-size: 0.8rem;
-  color: #94a3b8;
-}
-
-/* ==========================================
-   LOGOUT BUTTON
-   ========================================== */
-.logout-btn {
-  appearance: none;
-  -webkit-appearance: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 0.9rem;
-  background: rgba(244, 63, 94, 0.1);
-  border: 1px solid rgba(244, 63, 94, 0.3);
-  border-radius: 12px;
-  color: #f43f5e;
-  font-size: 0.95rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background-color var(--dur-normal) var(--ease), border-color var(--dur-normal) var(--ease), transform var(--dur-quick) var(--ease);
-  outline: none;
-}
-
-.logout-btn:hover {
-  background: rgba(244, 63, 94, 0.2);
-  border-color: rgba(244, 63, 94, 0.6);
-}
-
-.logout-btn:active {
-  transform: scale(0.97);
-}
-
-.logout-icon {
-  width: 18px;
-  height: 18px;
-  stroke: #f43f5e;
-}
-
-.logout-card {
-  margin-top: 1.5rem;
-}
+.header-title-box { padding: .75rem 0; text-align:center; text-transform:uppercase; letter-spacing:.08em; font-size:.8rem; font-weight:800; color:#bae6fd; }
+.profile-card-inner { display:flex; align-items:center; gap:16px; padding:1.25rem; }
+.profile-avatar-large { width:56px; height:56px; display:grid; place-items:center; border-radius:50%; background:linear-gradient(135deg,#38bdf8,#2563eb); font-size:1.35rem; font-weight:800; box-shadow:0 7px 22px rgba(37,99,235,.42); }
+.profile-info { display:flex; flex-direction:column; gap:4px; }.profile-name { font-size:1.1rem; font-weight:800; }.profile-email { color:#94a3b8; font-size:.82rem; }
+.profile-notice { margin:0 0 .75rem; padding:.75rem 1rem; border-radius:12px; font-size:.84rem; font-weight:600; }.success { background:rgba(16,185,129,.13); color:#6ee7b7; border:1px solid rgba(16,185,129,.3); }.error { background:rgba(244,63,94,.13); color:#fda4af; border:1px solid rgba(244,63,94,.3); }
+.profile-section { margin-bottom:.75rem; border:1px solid rgba(148,163,184,.14); border-radius:16px; overflow:hidden; background:rgba(15,23,42,.42); }
+.section-trigger { width:100%; padding:1rem 1.1rem; display:flex; justify-content:space-between; align-items:center; border:0; background:transparent; color:#f8fafc; font:700 .93rem -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; cursor:pointer; }.section-trigger span:last-child { color:#38bdf8; font-size:1.4rem; }
+.section-content { display:flex; flex-direction:column; gap:.85rem; padding:0 1.1rem 1.1rem; animation:sectionIn var(--dur-normal) var(--ease) both; }
+.section-content label { display:flex; flex-direction:column; gap:.38rem; color:#94a3b8; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+.section-content input,.section-content select { width:100%; padding:.72rem .8rem; border:1px solid #334155; border-radius:10px; background:#0f172a; color:#fff; font:500 .92rem -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; outline:0; }.section-content input:focus,.section-content select:focus { border-color:#38bdf8; box-shadow:0 0 0 3px rgba(56,189,248,.15); }
+.toggle-row { flex-direction:row!important; justify-content:space-between; align-items:center; text-transform:none!important; letter-spacing:0!important; }.toggle-row small { display:block; margin-top:3px; color:#64748b; font-weight:500; }.toggle-row input { width:42px; height:24px; accent-color:#38bdf8; }
+.primary-action,.quiet-action,.danger-action,.logout-btn { border-radius:10px; padding:.75rem 1rem; cursor:pointer; font-weight:700; font-size:.88rem; transition:transform var(--dur-quick) var(--ease),filter var(--dur-quick) var(--ease); }.primary-action:active,.quiet-action:active,.danger-action:active,.logout-btn:active { transform:scale(.98); }
+.primary-action { border:0; color:#fff; background:linear-gradient(135deg,#38bdf8,#2563eb); }.quiet-action { border:1px solid rgba(56,189,248,.38); background:rgba(56,189,248,.08); color:#bae6fd; }.danger-zone { margin-top:.25rem; padding:1rem; border:1px solid rgba(244,63,94,.3); border-radius:12px; background:rgba(244,63,94,.06); }.danger-zone p { margin:.35rem 0 .8rem; color:#fda4af; font-size:.8rem; }.danger-action,.logout-btn { width:100%; border:1px solid rgba(244,63,94,.35); color:#fda4af; background:rgba(244,63,94,.12); }.danger-action { margin-top:.65rem; }
+.logout-card { margin-top:1.5rem; }.logout-btn { border:0; background:transparent; color:#fda4af; }
+@keyframes sectionIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }

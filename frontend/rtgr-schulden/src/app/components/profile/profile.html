@@ -1,77 +1,43 @@
 <div class="app-viewport">
+  <div class="scroll-header-group"><div class="scroll-header-content"><nav class="sticky-tabs-container"><app-bubble width="100%"><div class="header-title-box"><span>Dein Profil</span></div></app-bubble></nav></div></div>
 
-  <!-- HEADER -->
-  <div class="scroll-header-group">
-    <div class="scroll-header-content">
-      <nav class="sticky-tabs-container">
-        <app-bubble width="100%">
-          <div class="header-title-box">
-            <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="12" cy="7" r="4" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span>Dein Profil</span>
-          </div>
-        </app-bubble>
-      </nav>
-    </div>
-  </div>
+  <main class="transactions-section"><div class="list-fade-wrapper">
+    <div class="transaction-card"><app-bubble width="100%"><div class="card-inner profile-card-inner">
+      <div class="profile-avatar-large">{{ username ? username.charAt(0).toUpperCase() : 'U' }}</div>
+      <div class="profile-info"><span class="profile-name">{{ username || 'Dein Konto' }}</span><span class="profile-email">Deine Konto-Zentrale</span></div>
+    </div></app-bubble></div>
 
-  <!-- PROFIL INHALT -->
-  <main class="transactions-section">
-    <div class="list-fade-wrapper">
-      
-      <!-- USER KARTE -->
-      <div class="transaction-card">
-        <app-bubble width="100%">
-          <div class="card-inner profile-card-inner">
-            <div class="profile-avatar-large">
-              {{ currentUser?.username ? currentUser.username.charAt(0).toUpperCase() : 'U' }}
-            </div>
-            <div class="profile-info">
-              <span class="profile-name">{{ currentUser?.username || 'Eingeloggter Benutzer' }}</span>
-              <span class="profile-email">Aktiv in der SchuldenApp</span>
-            </div>
-          </div>
-        </app-bubble>
+    <p *ngIf="message" class="profile-notice success">{{ message }}</p>
+    <p *ngIf="error" class="profile-notice error">{{ error }}</p>
+
+    <section class="profile-section"><button class="section-trigger" (click)="toggle('profile')"><span>Profil & Darstellung</span><span>›</span></button>
+      <div class="section-content" *ngIf="openSection === 'profile'">
+        <label>Name<input [(ngModel)]="username" autocomplete="username"></label>
+        <label>Währung<select [(ngModel)]="preferredCurrency"><option value="EUR">Euro (€)</option><option value="USD">US-Dollar ($)</option><option value="CHF">Schweizer Franken (CHF)</option><option value="GBP">Britisches Pfund (£)</option></select></label>
+        <label class="toggle-row"><span><strong>Bewegung reduzieren</strong><small>Ruhigere Übergänge in der App</small></span><input type="checkbox" [(ngModel)]="reduceMotion"></label>
+        <button class="primary-action" [disabled]="saving" (click)="saveProfile()">Änderungen sichern</button>
       </div>
+    </section>
 
-      <!-- EINSTELLUNGEN & INFOS -->
-      <div class="transaction-card">
-        <app-bubble width="100%">
-          <div class="info-card">
-            <div class="info-card-header">
-              <h3 class="info-card-title">App-Informationen</h3>
-            </div>
-
-            <div class="info-row">
-              <span class="info-row-label">Version</span>
-              <span class="info-row-value">{{ appVersion }}</span>
-            </div>
-
-            <div class="info-row">
-              <span class="info-row-label">Authentifizierung</span>
-              <span class="info-row-value is-accent">JWT</span>
-            </div>
-          </div>
-        </app-bubble>
+    <section class="profile-section"><button class="section-trigger" (click)="toggle('security')"><span>Sicherheit & Passwort</span><span>›</span></button>
+      <div class="section-content" *ngIf="openSection === 'security'">
+        <label>Aktuelles Passwort<input type="password" [(ngModel)]="currentPassword" autocomplete="current-password"></label>
+        <label>Neues Passwort<input type="password" [(ngModel)]="newPassword" minlength="6" autocomplete="new-password"></label>
+        <button class="primary-action" [disabled]="saving" (click)="changePassword()">Passwort ändern</button>
+        <button class="quiet-action" [disabled]="saving" (click)="logoutAll()">Auf allen Geräten abmelden</button>
       </div>
+    </section>
 
-      <!-- LOGOUT BUTTON -->
-      <div class="transaction-card logout-card">
-        <app-bubble width="100%">
-          <button type="button" class="logout-btn" (click)="logout()">
-            <svg class="logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke-linecap="round" stroke-linejoin="round"/>
-              <polyline points="16 17 21 12 16 7" stroke-linecap="round" stroke-linejoin="round"/>
-              <line x1="21" y1="12" x2="9" y2="12" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span>Abmelden</span>
-          </button>
-        </app-bubble>
+    <section class="profile-section"><button class="section-trigger" (click)="toggle('data')"><span>Daten & Konto</span><span>›</span></button>
+      <div class="section-content" *ngIf="openSection === 'data'">
+        <button class="quiet-action" (click)="exportData()">Transaktionen als CSV exportieren</button>
+        <div class="danger-zone"><strong>Konto endgültig löschen</strong><p>Alle zugehörigen Daten werden unwiderruflich entfernt.</p>
+          <input type="password" [(ngModel)]="deletePassword" placeholder="Passwort zur Bestätigung" autocomplete="current-password">
+          <button class="danger-action" [disabled]="saving" (click)="deleteAccount()">Konto löschen</button>
+        </div>
       </div>
+    </section>
 
-    </div>
-  </main>
-
+    <div class="transaction-card logout-card"><app-bubble width="100%"><button type="button" class="logout-btn" (click)="logout()">Abmelden</button></app-bubble></div>
+  </div></main>
 </div>
