@@ -4,7 +4,7 @@ import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { Subscription, filter } from 'rxjs';
 import { TabMenuComponent } from '../tab-menu/tab-menu';
 import { AddBillComponent } from '../add-bill/add-bill';
-import { ScrollProgressService } from '../../services/scroll-progress.service';
+import { ScrollStateService } from '../../services/scroll-state.service';
 import { TransactionService } from '../../services/transaction.service';
 
 /** Ab diesem Betrag gilt die Stimmung als eindeutig positiv/negativ - kleine
@@ -21,7 +21,7 @@ const MOOD_THRESHOLD = 1;
 export class Dashboard implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private router = inject(Router);
-  private scrollProgress = inject(ScrollProgressService);
+  private scrollState = inject(ScrollStateService);
   private transactionService = inject(TransactionService);
   private routerEventsSub?: Subscription;
   private balanceSub?: Subscription;
@@ -48,10 +48,9 @@ export class Dashboard implements OnInit, OnDestroy {
       });
 
     // Ein einziger, geteilter Scroll-Listener für die ganze App (statt pro
-    // Screen ein eigener) - treibt alle Scroll-gekoppelten Animationen
-    // (Saldo-Hero-Kollaps, FAB-Dock-Verschiebung, Header-Weichzeichner)
-    // kontinuierlich über eine CSS Custom Property.
-    this.scrollProgress.start();
+    // Screen ein eigener) - setzt nur die .is-scrolled-Klasse auf <html>,
+    // die eigentliche Animation (Saldo-Hero) übernimmt reines CSS.
+    this.scrollState.start();
 
     // Ambient-Hintergrund reagiert dezent auf den Gesamtsaldo: leicht ins
     // Grüne, wenn insgesamt mehr Geld an dich fließt, leicht ins Warme,

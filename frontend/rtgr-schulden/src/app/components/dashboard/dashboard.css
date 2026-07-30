@@ -129,9 +129,8 @@ app-tab-menu {
 
 .center-glow-halo {
   position: absolute;
-  /* Kontinuierlich an den Scroll-Fortschritt gekoppelt statt hartem
-     Klassen-Sprung: die Halo wandert weich mit dem FAB mit. */
-  top: calc(-45px - (var(--scroll-progress) * 20px));
+  /* Bewusst statisch: kein Scroll-Effekt mehr auf dem FAB/Halo. */
+  top: -45px;
   left: 50%;
   transform: translateX(-50%);
   width: 120px;
@@ -141,16 +140,14 @@ app-tab-menu {
   z-index: 5;
   pointer-events: none;
   animation: breatheGlow 4s infinite var(--ease-in-out) alternate;
-  transition: top var(--dur-base) var(--ease-spring);
 }
 
 .fab-center-btn {
   appearance: none;
   -webkit-appearance: none;
   position: absolute;
-  /* Wandert kontinuierlich mit dem Scroll-Fortschritt nach oben, statt bei
-     einem festen Schwellwert abrupt zu springen. */
-  top: calc(-24px - (var(--scroll-progress) * 36px));
+  /* Bewusst statisch: bleibt beim Scrollen an derselben Stelle stehen. */
+  top: -24px;
   left: 50%;
   transform: translateX(-50%);
   width: 54px;
@@ -168,8 +165,7 @@ app-tab-menu {
   box-shadow: 0 10px 25px rgba(37, 99, 235, 0.45),
               0 4px 12px rgba(0, 0, 0, 0.4),
               inset 0 2px 4px rgba(255, 255, 255, 0.45);
-  transition: top var(--dur-base) var(--ease-spring),
-              transform var(--dur-fast) var(--ease-spring),
+  transition: transform var(--dur-fast) var(--ease-spring),
               box-shadow var(--dur-base) var(--ease-standard);
 }
 

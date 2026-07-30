@@ -1,24 +1,38 @@
 @import '../../../styles/shared-screen.css';
 
 /* ==========================================
-   1. SALDO HERO (kontinuierlicher Kollaps beim Scrollen)
-   Reagiert direkt auf --scroll-progress (0-1), von ScrollProgressService
-   per rAF geschrieben - keine Angular-Klassenbindung, kein CSS-Transition-
-   Lag: die Hero folgt dem Finger/Scrollrad 1:1, genau wie ein natives
-   iOS Large-Title, das beim Scrollen einklappt.
+   1. SALDO HERO
+   Verschwindet sauber bei minimalem Scroll (schon ab 1px) - binäre
+   .is-scrolled-Klasse auf <html> (ScrollStateService) + reine
+   CSS-Transition, statt kontinuierlich per JS bei jedem Scroll-Event
+   nachgeführt zu werden. Läuft dadurch immer flüssig/compositor-getrieben,
+   unabhängig davon wie unregelmäßig der Browser Scroll-Events feuert.
    ========================================== */
 .saldo-hero {
   position: relative;
   z-index: 2;
   width: 100%;
-  padding: calc(1.5rem * (1 - var(--scroll-progress))) 1rem calc(1.25rem * (1 - var(--scroll-progress))) 1rem;
+  padding: 1.5rem 1rem 1.25rem 1rem;
   text-align: center;
-  max-height: calc(140px * (1 - var(--scroll-progress)));
-  opacity: calc(1 - var(--scroll-progress));
-  transform: translateY(calc(var(--scroll-progress) * -16px)) scale(calc(1 - (var(--scroll-progress) * 0.06)));
+  max-height: 140px;
+  opacity: 1;
+  transform: translateY(0);
   overflow: hidden;
+  transition: opacity var(--dur-fast) var(--ease-standard),
+              transform var(--dur-fast) var(--ease-standard),
+              max-height var(--dur-fast) var(--ease-standard),
+              padding var(--dur-fast) var(--ease-standard);
   animation: slideDownHero var(--dur-slow) var(--ease-spring) backwards;
   animation-delay: 0.05s;
+}
+
+html.is-scrolled .saldo-hero {
+  opacity: 0;
+  transform: translateY(-10px);
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  pointer-events: none;
 }
 
 .saldo-caption {

@@ -10,29 +10,14 @@
   to { opacity: 0; }
 }
 
-/* Container-Transform: das Sheet "blüht" aus der Position des FAB-Buttons
-   auf (unten mittig), statt generisch von unten reinzurutschen - der
-   "+"-Button verwandelt sich quasi selbst in die Rechnungs-Maske. */
-@keyframes containerExpand {
-  0% {
-    clip-path: circle(0px at 50% 100%);
-    border-radius: 50%;
-  }
-  100% {
-    clip-path: circle(120vh at 50% 100%);
-    border-radius: 24px 24px 0 0;
-  }
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
-@keyframes containerCollapse {
-  0% {
-    clip-path: circle(120vh at 50% 100%);
-    border-radius: 24px 24px 0 0;
-  }
-  100% {
-    clip-path: circle(0px at 50% 100%);
-    border-radius: 50%;
-  }
+@keyframes slideDown {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
 }
 
 /* ==========================================
@@ -69,17 +54,34 @@
   box-shadow: 0 -15px 40px rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  /* Blüht aus der FAB-Position (unten mittig) auf, statt generisch
-     reinzurutschen - der "+"-Button "wird" quasi diese Sheet. */
-  animation: containerExpand var(--dur-hero) var(--ease-out) forwards;
-  transform-origin: 50% 100%;
+  animation: slideUp var(--dur-base) var(--ease-out) forwards;
   max-height: 90vh;
   overflow-y: auto;
   color: #f8fafc;
 }
 
 .modal-card.closing {
-  animation: containerCollapse var(--dur-base) var(--ease-standard) forwards;
+  animation: slideDown var(--dur-base) var(--ease-standard) forwards;
+}
+
+/* ==========================================
+   LADEZUSTAND (bevor Freundesliste da ist)
+   ========================================== */
+.modal-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  padding: 1.75rem 1.5rem;
+  width: 100%;
+  max-width: 400px;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 500;
+  animation: slideUp var(--dur-base) var(--ease-out) forwards;
 }
 
 /* ==========================================

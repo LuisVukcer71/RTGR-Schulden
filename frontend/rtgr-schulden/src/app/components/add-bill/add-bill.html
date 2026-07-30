@@ -1,4 +1,14 @@
 <div class="modal-backdrop" [class.closing]="isClosing" (click)="closeModal()">
+
+  <!-- Solange die Freundesliste noch lädt, zeigt sich nur der abgedunkelte
+       Hintergrund + ein Ladeindikator - die Sheet erscheint erst, wenn
+       die Daten wirklich da sind, statt erst leer und dann nachladend. -->
+  @if (isLoadingFriends) {
+    <div class="modal-loading" aria-live="polite">
+      <span class="btn-spinner" aria-hidden="true"></span>
+      <span>Wird geladen...</span>
+    </div>
+  } @else {
   <div class="modal-card" [class.closing]="isClosing" (click)="$event.stopPropagation()">
 
     <!-- Header -->
@@ -104,4 +114,5 @@
     </div>
 
   </div>
+  }
 </div>

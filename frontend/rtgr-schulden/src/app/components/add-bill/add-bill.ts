@@ -28,6 +28,10 @@ export class AddBillComponent implements OnInit {
   isSubmitting: boolean = false;
   errorMessage: string = '';
 
+  /** Solange true, ist nur der abgedunkelte Hintergrund + Ladeindikator zu
+   *  sehen - die Sheet selbst erscheint erst, wenn die Freundesliste da ist. */
+  isLoadingFriends: boolean = true;
+
   /** Spielt die Schließen-Animation ab, bevor die Component tatsächlich entfernt wird. */
   isClosing: boolean = false;
   private readonly closeAnimationMs = 320; // deckt sich mit --dur-base in styles.css
@@ -45,12 +49,13 @@ export class AddBillComponent implements OnInit {
           .filter(u => u.username !== currentUser?.username)
           .map(u => u.username);
 
-        // Zwingt Angular, die Chips SOFORT anzuzeigen
+        this.isLoadingFriends = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Fehler beim Laden der User:', err);
         this.errorMessage = 'Fehler beim Laden der Benutzer.';
+        this.isLoadingFriends = false;
         this.cdr.detectChanges();
       }
     });

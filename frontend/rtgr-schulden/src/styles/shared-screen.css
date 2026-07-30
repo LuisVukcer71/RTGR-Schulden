@@ -30,24 +30,25 @@
 }
 
 /* ==========================================
-   STICKY HEADER GROUP (TABS)
-   Wird beim Scrollen kontinuierlich zu einer Frosted-Glass-Leiste, ganz
-   ohne Angular-Klassenbindung oder Transition-Lag - 1:1 an
-   --scroll-progress gekoppelt, exakt wie eine native iOS-Navigationsleiste.
+   NAV-BAR (STICKY HEADER GROUP)
+   Echte, statische Full-Width-Leiste (bricht bewusst aus der 400px-Spalte
+   von .app-viewport aus) - fix oben, keine Scroll-Kopplung, kein Wachsen.
+   Der Inhalt bleibt trotzdem auf die App-Spalte zentriert (siehe
+   .scroll-header-content).
    ========================================== */
 .scroll-header-group {
   position: sticky;
   top: 0;
   z-index: 100;
-  width: 100%;
-  padding: 0.25rem 1rem 0 1rem;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
   margin-bottom: 1.25rem;
-  border-radius: calc(var(--scroll-progress) * 18px);
-  background-color: rgba(10, 10, 10, calc(var(--scroll-progress) * 0.6));
-  backdrop-filter: blur(calc(var(--scroll-progress) * 14px));
-  -webkit-backdrop-filter: blur(calc(var(--scroll-progress) * 14px));
-  box-shadow: 0 8px 20px rgba(0, 0, 0, calc(var(--scroll-progress) * 0.25));
-  border-bottom: 1px solid rgba(255, 255, 255, calc(var(--scroll-progress) * 0.08));
+  padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 1rem 0.75rem 1rem;
+  background-color: rgba(10, 10, 10, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   animation: popIn var(--dur-slow) var(--ease-spring) backwards;
   animation-delay: 0.1s;
 }
@@ -57,6 +58,8 @@
   flex-direction: column;
   gap: 0.75rem;
   width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
 }
 
 .sticky-tabs-container {

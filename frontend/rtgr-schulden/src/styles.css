@@ -41,12 +41,6 @@ body {
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* Federnde Pops: Toggles, Badges, aktive Zustände */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* Einfache Hover-/Farb-Übergänge */
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* Symmetrisch: Modals/Sheets rein & raus */
-
-  /* Kontinuierlicher Scroll-Fortschritt (0 = oben, 1 = voll gescrollt),
-     wird von ScrollProgressService per rAF auf <html> geschrieben. Jede
-     Komponente kann darauf direkt per calc() reagieren, ganz ohne eigenen
-     Scroll-Listener oder Change Detection. */
-  --scroll-progress: 0;
 }
 
 /* Reduced-Motion: System-Einstellung respektieren statt Animationen aufzudrängen. */
@@ -60,28 +54,64 @@ body {
 }
 
 /* ==========================================
-   VIEW TRANSITIONS - echter Seitenmorph bei jeder Routen-Navigation
-   (Login<->Dashboard, Tab-Wechsel). Ersetzt den bisherigen harten Schnitt
-   durch einen Zoom-Blur-Überblend-Effekt. Läuft nativ im Browser (kein JS,
-   keine Angular-Animations-Library nötig), Browser ohne Unterstützung
-   navigieren einfach ohne Übergang weiter.
+   VIEW TRANSITIONS - echte Seitenübergänge bei jeder Routen-Navigation.
+   Läuft nativ im Browser (kein JS, keine Angular-Animations-Library
+   nötig), Browser ohne Unterstützung navigieren einfach ohne Übergang
+   weiter.
+
+   Zwei Fälle:
+   1. Tab-Wechsel (Schulden/Freunde/Profil) - gerichtetes Swipe, Richtung
+      kommt per [data-nav-direction] von app.config.ts (onViewTransitionCreated).
+   2. Alles andere (z.B. Login <-> Dashboard) - schlichte, klare Überblendung.
    ========================================== */
 ::view-transition-old(root) {
-  animation: viewTransitionOut var(--dur-slow) var(--ease-in-out) both;
+  animation: viewFadeOut var(--dur-fast) var(--ease-standard) both;
 }
 
 ::view-transition-new(root) {
-  animation: viewTransitionIn var(--dur-slow) var(--ease-out) both;
+  animation: viewFadeIn var(--dur-fast) var(--ease-standard) both;
 }
 
-@keyframes viewTransitionOut {
-  from { opacity: 1; transform: scale(1); filter: blur(0); }
-  to { opacity: 0; transform: scale(1.04); filter: blur(10px); }
+@keyframes viewFadeOut {
+  to { opacity: 0; }
 }
 
-@keyframes viewTransitionIn {
-  from { opacity: 0; transform: scale(0.96); filter: blur(10px); }
-  to { opacity: 1; transform: scale(1); filter: blur(0); }
+@keyframes viewFadeIn {
+  from { opacity: 0; }
+}
+
+html[data-nav-direction="forward"]::view-transition-old(root) {
+  animation: viewSwipeOutLeft var(--dur-base) var(--ease-out) both;
+}
+
+html[data-nav-direction="forward"]::view-transition-new(root) {
+  animation: viewSwipeInFromRight var(--dur-base) var(--ease-out) both;
+}
+
+html[data-nav-direction="backward"]::view-transition-old(root) {
+  animation: viewSwipeOutRight var(--dur-base) var(--ease-out) both;
+}
+
+html[data-nav-direction="backward"]::view-transition-new(root) {
+  animation: viewSwipeInFromLeft var(--dur-base) var(--ease-out) both;
+}
+
+@keyframes viewSwipeOutLeft {
+  to { transform: translateX(-100%); }
+}
+
+@keyframes viewSwipeInFromRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes viewSwipeOutRight {
+  to { transform: translateX(100%); }
+}
+
+@keyframes viewSwipeInFromLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
