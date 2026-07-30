@@ -10,30 +10,54 @@
     <p *ngIf="message" class="profile-notice success">{{ message }}</p>
     <p *ngIf="error" class="profile-notice error">{{ error }}</p>
 
-    <section class="profile-section"><button class="section-trigger" (click)="toggle('profile')"><span>Profil & Darstellung</span><span>›</span></button>
-      <div class="section-content" *ngIf="openSection === 'profile'">
-        <label>Name<input [(ngModel)]="username" autocomplete="username"></label>
-        <label>Währung<select [(ngModel)]="preferredCurrency"><option value="EUR">Euro (€)</option><option value="USD">US-Dollar ($)</option><option value="CHF">Schweizer Franken (CHF)</option><option value="GBP">Britisches Pfund (£)</option></select></label>
-        <label class="toggle-row"><span><strong>Bewegung reduzieren</strong><small>Ruhigere Übergänge in der App</small></span><input type="checkbox" [(ngModel)]="reduceMotion"></label>
-        <button class="primary-action" [disabled]="saving" (click)="saveProfile()">Änderungen sichern</button>
+    <section class="profile-section">
+      <button class="section-trigger" [class.open]="openSection === 'profile'" [attr.aria-expanded]="openSection === 'profile'" (click)="toggle('profile')">
+        <span>Profil & Darstellung</span>
+        <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg>
+      </button>
+      <div class="section-collapse" [class.open]="openSection === 'profile'">
+        <div class="section-collapse-inner">
+          <div class="section-content" [attr.inert]="openSection !== 'profile' ? '' : null">
+            <label>Name<input [(ngModel)]="username" autocomplete="username"></label>
+            <label>Währung<select [(ngModel)]="preferredCurrency"><option value="EUR">Euro (€)</option><option value="USD">US-Dollar ($)</option><option value="CHF">Schweizer Franken (CHF)</option><option value="GBP">Britisches Pfund (£)</option></select></label>
+            <label class="toggle-row"><span><strong>Bewegung reduzieren</strong><small>Ruhigere Übergänge in der App</small></span><input type="checkbox" [(ngModel)]="reduceMotion"></label>
+            <button class="primary-action" [disabled]="saving" (click)="saveProfile()">Änderungen sichern</button>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="profile-section"><button class="section-trigger" (click)="toggle('security')"><span>Sicherheit & Passwort</span><span>›</span></button>
-      <div class="section-content" *ngIf="openSection === 'security'">
-        <label>Aktuelles Passwort<input type="password" [(ngModel)]="currentPassword" autocomplete="current-password"></label>
-        <label>Neues Passwort<input type="password" [(ngModel)]="newPassword" minlength="6" autocomplete="new-password"></label>
-        <button class="primary-action" [disabled]="saving" (click)="changePassword()">Passwort ändern</button>
-        <button class="quiet-action" [disabled]="saving" (click)="logoutAll()">Auf allen Geräten abmelden</button>
+    <section class="profile-section">
+      <button class="section-trigger" [class.open]="openSection === 'security'" [attr.aria-expanded]="openSection === 'security'" (click)="toggle('security')">
+        <span>Sicherheit & Passwort</span>
+        <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg>
+      </button>
+      <div class="section-collapse" [class.open]="openSection === 'security'">
+        <div class="section-collapse-inner">
+          <div class="section-content" [attr.inert]="openSection !== 'security' ? '' : null">
+            <label>Aktuelles Passwort<input type="password" [(ngModel)]="currentPassword" autocomplete="current-password"></label>
+            <label>Neues Passwort<input type="password" [(ngModel)]="newPassword" minlength="6" autocomplete="new-password"></label>
+            <button class="primary-action" [disabled]="saving" (click)="changePassword()">Passwort ändern</button>
+            <button class="quiet-action" [disabled]="saving" (click)="logoutAll()">Auf allen Geräten abmelden</button>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="profile-section"><button class="section-trigger" (click)="toggle('data')"><span>Daten & Konto</span><span>›</span></button>
-      <div class="section-content" *ngIf="openSection === 'data'">
-        <button class="quiet-action" (click)="exportData()">Transaktionen als CSV exportieren</button>
-        <div class="danger-zone"><strong>Konto endgültig löschen</strong><p>Alle zugehörigen Daten werden unwiderruflich entfernt.</p>
-          <input type="password" [(ngModel)]="deletePassword" placeholder="Passwort zur Bestätigung" autocomplete="current-password">
-          <button class="danger-action" [disabled]="saving" (click)="deleteAccount()">Konto löschen</button>
+    <section class="profile-section">
+      <button class="section-trigger" [class.open]="openSection === 'data'" [attr.aria-expanded]="openSection === 'data'" (click)="toggle('data')">
+        <span>Daten & Konto</span>
+        <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg>
+      </button>
+      <div class="section-collapse" [class.open]="openSection === 'data'">
+        <div class="section-collapse-inner">
+          <div class="section-content" [attr.inert]="openSection !== 'data' ? '' : null">
+            <button class="quiet-action" (click)="exportData()">Transaktionen als CSV exportieren</button>
+            <div class="danger-zone"><strong>Konto endgültig löschen</strong><p>Alle zugehörigen Daten werden unwiderruflich entfernt.</p>
+              <input type="password" [(ngModel)]="deletePassword" placeholder="Passwort zur Bestätigung" autocomplete="current-password">
+              <button class="danger-action" [disabled]="saving" (click)="deleteAccount()">Konto löschen</button>
+            </div>
+          </div>
         </div>
       </div>
     </section>

@@ -73,7 +73,7 @@
   <main class="transactions-section">
     <div class="list-fade-wrapper">
       @if (activeTab === 'persons') {
-        @for (friend of friendsList; track friend.id) {
+        @for (friend of sortedFriendsList; track friend.id) {
           <div class="transaction-card">
             <app-bubble width="100%">
               <div class="card-inner">
@@ -129,16 +129,122 @@
             </div>
 
             <div class="info-row">
-              <span class="info-row-label">Durchschnitt pro Freund</span>
-              <span
-                class="info-row-value"
-                [countUp]="(friendStats?.totalSpent ?? 0) / (friendStats?.activeFriendsCount || 1)"
-              ></span>
+              <span class="info-row-label">Ø pro Rechnung</span>
+              <span class="info-row-value" [countUp]="averageAmount"></span>
             </div>
 
             <div class="info-row">
               <span class="info-row-label">Aktive Freunde</span>
               <span class="info-row-value">{{ friendStats?.activeFriendsCount ?? 0 }}</span>
+            </div>
+          </div>
+        </app-bubble>
+
+        <!-- BEGLICHEN-QUOTE -->
+        <app-bubble width="100%">
+          <div class="info-card">
+            <div class="info-card-header">
+              <h3 class="info-card-title">Beglichen-Quote</h3>
+            </div>
+            <div class="ring-stat-row">
+              <div class="ring-stat">
+                <svg viewBox="0 0 96 96" class="settlement-ring" aria-hidden="true">
+                  <circle class="ring-track" cx="48" cy="48" r="42"></circle>
+                  <circle
+                    class="ring-fill"
+                    cx="48" cy="48" r="42"
+                    [style.stroke-dasharray]="ringCircumference"
+                    [style.stroke-dashoffset]="ringOffset"
+                  ></circle>
+                </svg>
+                <div class="ring-label">
+                  <span class="ring-value">{{ settlementRate }}%</span>
+                </div>
+              </div>
+              <div class="ring-stat-text">
+                <span class="ring-stat-headline">{{ settledCount }} von {{ totalCount }}</span>
+                <span class="ring-stat-caption">Rechnungen sind beglichen</span>
+              </div>
+            </div>
+          </div>
+        </app-bubble>
+
+        <!-- SALDO-RANGLISTE -->
+        <app-bubble width="100%">
+          <div class="info-card">
+            <div class="info-card-header">
+              <h3 class="info-card-title">Saldo-Rangliste</h3>
+            </div>
+            <div class="rank-list">
+              @for (friend of rankedFriends; track friend.id; let i = $index) {
+                <div class="rank-row">
+                  <span class="rank-index">{{ i + 1 }}</span>
+                  <div class="rank-info">
+                    <span class="rank-name">{{ friend.name }}</span>
+                    <div class="rank-bar-track">
+                      <div
+                        class="rank-bar-fill"
+                        [class.is-positive]="friend.balance > 0"
+                        [class.is-negative]="friend.balance < 0"
+                        [style.width.%]="barWidthPercent(friend.balance)"
+                      ></div>
+                    </div>
+                  </div>
+                  <span
+                    class="rank-amount"
+                    [class.is-positive]="friend.balance > 0"
+                    [class.is-negative]="friend.balance < 0"
+                    [countUp]="friend.balance"
+                    countUpPrefixPositive="+"
+                  ></span>
+                </div>
+              } @empty {
+                <p class="stats-empty">Noch keine offenen Salden zum Vergleichen.</p>
+              }
+            </div>
+          </div>
+        </app-bubble>
+
+        <!-- TOP-ANLÄSSE -->
+        <app-bubble width="100%">
+          <div class="info-card">
+            <div class="info-card-header">
+              <h3 class="info-card-title">Top-Anlässe</h3>
+            </div>
+            <div class="reason-list">
+              @for (r of topReasons; track r.reason; let i = $index) {
+                <div class="reason-row">
+                  <span class="reason-rank">{{ i + 1 }}</span>
+                  <div class="reason-info">
+                    <span class="reason-name">{{ r.reason }}</span>
+                    <span class="reason-count">{{ r.count }}x geteilt</span>
+                  </div>
+                  <span class="reason-total" [countUp]="r.total"></span>
+                </div>
+              } @empty {
+                <p class="stats-empty">Noch keine Rechnungen vorhanden.</p>
+              }
+            </div>
+          </div>
+        </app-bubble>
+
+        <!-- HIGHLIGHTS -->
+        <app-bubble width="100%">
+          <div class="info-card">
+            <div class="info-card-header">
+              <h3 class="info-card-title">Highlights</h3>
+            </div>
+            <div class="highlight-grid">
+              <div class="highlight-tile">
+                <span class="highlight-label">Meistgeteilt mit</span>
+                <span class="highlight-value">{{ topPartner?.name ?? '–' }}</span>
+                <span class="highlight-sub">{{ topPartner ? topPartner.count + 'x zusammen' : 'Noch keine Daten' }}</span>
+              </div>
+              <div class="highlight-tile">
+                <span class="highlight-label">Größte Ausgabe</span>
+                <span class="highlight-value" [countUp]="biggestTransaction?.amount ?? 0"></span>
+                <span class="highlight-sub">{{ biggestTransaction?.reason ?? 'Noch keine Daten' }}</span>
+              </div>
             </div>
           </div>
         </app-bubble>

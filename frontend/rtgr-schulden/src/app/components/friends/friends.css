@@ -30,3 +30,256 @@
 .card-subtitle.text-balanced {
   color: #10b981;
 }
+
+/* ==========================================
+   STATISTIKEN: leichter Versatz zwischen den Karten, damit sie nicht alle
+   exakt gleichzeitig auftauchen.
+   ========================================== */
+.info-card:nth-of-type(1) { animation-delay: 0ms; }
+.info-card:nth-of-type(2) { animation-delay: 40ms; }
+.info-card:nth-of-type(3) { animation-delay: 80ms; }
+.info-card:nth-of-type(4) { animation-delay: 120ms; }
+.info-card:nth-of-type(5) { animation-delay: 160ms; }
+
+.stats-empty {
+  margin: 0;
+  padding: 0.5rem 0;
+  color: #64748b;
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+/* ---------- Beglichen-Quote (Ring) ---------- */
+.ring-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.ring-stat {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
+}
+
+.settlement-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ring-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 8;
+}
+
+.ring-fill {
+  fill: none;
+  stroke: #38bdf8;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset var(--dur-slow) var(--ease-emphasized);
+}
+
+.ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring-value {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: -0.02em;
+}
+
+.ring-stat-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.ring-stat-headline {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.ring-stat-caption {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+/* ---------- Saldo-Rangliste ---------- */
+.rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.rank-index {
+  width: 16px;
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  text-align: center;
+}
+
+.rank-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.rank-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rank-bar-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.rank-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #64748b;
+  transition: width var(--dur-slow) var(--ease-emphasized);
+}
+
+.rank-bar-fill.is-positive {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.rank-bar-fill.is-negative {
+  background: linear-gradient(90deg, #f43f5e, #fb7185);
+}
+
+.rank-amount {
+  flex-shrink: 0;
+  min-width: 68px;
+  text-align: right;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+/* ---------- Top-Anlässe ---------- */
+.reason-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.reason-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.reason-rank {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.reason-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.reason-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reason-count {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.reason-total {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+/* ---------- Highlights ---------- */
+.highlight-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.highlight-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.9rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  min-width: 0;
+}
+
+.highlight-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.highlight-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.highlight-sub {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
