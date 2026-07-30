@@ -3,12 +3,6 @@
 /* ==========================================
    FREUNDE-LISTE (bildschirmspezifische Zusätze)
    ========================================== */
-.card-info-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 .friend-avatar {
   width: 36px;
   height: 36px;

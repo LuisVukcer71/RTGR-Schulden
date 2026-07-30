@@ -15,11 +15,40 @@
 
     <!-- Formular -->
     <div class="modal-body">
-      
+
+      <!-- Wie beim letzten Mal -->
+      <button
+        type="button"
+        class="last-config-chip"
+        *ngIf="lastConfig"
+        [disabled]="isSubmitting"
+        (click)="applyLastConfig()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        Wie beim letzten Mal ausfüllen
+      </button>
+
       <!-- Verwendungszweck -->
       <div class="input-group">
         <label>Wofür?</label>
         <input type="text" [(ngModel)]="title" placeholder="z.B. Restaurant, Kino, Wocheneinkauf..." [disabled]="isSubmitting" />
+      </div>
+
+      <!-- Kategorie -->
+      <div class="input-group">
+        <label>Kategorie (optional)</label>
+        <div class="category-grid" role="group" aria-label="Kategorie">
+          <button
+            type="button"
+            *ngFor="let cat of categories"
+            class="category-chip"
+            [class.active]="category === cat.id"
+            [attr.aria-pressed]="category === cat.id"
+            [disabled]="isSubmitting"
+            (click)="selectCategory(cat.id)">
+            <app-category-icon [categoryId]="cat.id"></app-category-icon>
+            <span>{{ cat.label }}</span>
+          </button>
+        </div>
       </div>
 
       <!-- Betrag -->
@@ -91,8 +120,67 @@
         </div>
       </div>
 
-      <!-- Live Vorschau Box -->
-      <div class="preview-box" *ngIf="totalAmount && selectedParticipants.length > 0">
+      <!-- Aufteilung: Gleich / Beträge / Prozent -->
+      <div class="input-group" *ngIf="selectedParticipants.length > 1">
+        <label>Aufteilung</label>
+        <div class="split-mode-grid" role="group" aria-label="Aufteilungsart">
+          <button type="button" class="split-mode-btn" [class.active]="splitMode === 'equal'" [disabled]="isSubmitting" (click)="selectSplitMode('equal')">Gleich</button>
+          <button type="button" class="split-mode-btn" [class.active]="splitMode === 'exact'" [disabled]="isSubmitting" (click)="selectSplitMode('exact')">Beträge</button>
+          <button type="button" class="split-mode-btn" [class.active]="splitMode === 'percent'" [disabled]="isSubmitting" (click)="selectSplitMode('percent')">Prozent</button>
+        </div>
+
+        <!-- Custom-Beträge -->
+        <div class="custom-split-list" *ngIf="splitMode === 'exact'">
+          <div class="custom-split-row" *ngFor="let person of selectedParticipants">
+            <span class="custom-split-name">{{ person }}</span>
+            <div class="custom-split-input-wrapper">
+              <span class="currency">€</span>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                [disabled]="isSubmitting"
+                [ngModel]="customAmounts[person]"
+                (ngModelChange)="setCustomAmount(person, $event)"
+              />
+            </div>
+          </div>
+          <div class="custom-split-footer">
+            <button type="button" class="custom-split-reset" [disabled]="isSubmitting" (click)="distributeEqually()">Gleichmäßig verteilen</button>
+            <span class="custom-split-balance" [class.is-balanced]="isCustomSplitBalanced">
+              {{ isCustomSplitBalanced ? 'Stimmt genau' : (customAmountsRemaining > 0 ? (customAmountsRemaining | currency:'EUR':'symbol':'1.2-2') + ' fehlen noch' : (-customAmountsRemaining | currency:'EUR':'symbol':'1.2-2') + ' zu viel') }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Custom-Prozente -->
+        <div class="custom-split-list" *ngIf="splitMode === 'percent'">
+          <div class="custom-split-row" *ngFor="let person of selectedParticipants">
+            <span class="custom-split-name">{{ person }}</span>
+            <div class="custom-split-input-wrapper">
+              <input
+                type="number"
+                step="1"
+                min="0"
+                max="100"
+                [disabled]="isSubmitting"
+                [ngModel]="customPercents[person]"
+                (ngModelChange)="setCustomPercent(person, $event)"
+              />
+              <span class="currency percent-sign">%</span>
+            </div>
+          </div>
+          <div class="custom-split-footer">
+            <button type="button" class="custom-split-reset" [disabled]="isSubmitting" (click)="distributeEqually()">Gleichmäßig verteilen</button>
+            <span class="custom-split-balance" [class.is-balanced]="isCustomSplitBalanced">
+              {{ isCustomSplitBalanced ? 'Stimmt genau' : (customPercentRemaining > 0 ? customPercentRemaining + '% fehlen noch' : (-customPercentRemaining) + '% zu viel') }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Vorschau Box (nur im Gleich-Modus - bei Beträgen/Prozenten sieht man die Aufteilung schon oben) -->
+      <div class="preview-box" *ngIf="totalAmount && selectedParticipants.length > 0 && (splitMode === 'equal' || selectedParticipants.length === 1)">
         <div class="preview-row">
           <span>Anteil pro Person:</span>
           <span class="highlight-amount">{{ perPersonShare | currency:'EUR':'symbol':'1.2-2' }}</span>
@@ -109,7 +197,7 @@
     <!-- Footer Actions -->
     <div class="modal-footer">
       <button class="btn-cancel" (click)="closeModal()" [disabled]="isSubmitting || isClosing">Abbrechen</button>
-      <button class="btn-submit" (click)="submitBill()" [disabled]="isSubmitting || isClosing">
+      <button class="btn-submit" (click)="submitBill()" [disabled]="isSubmitting || isClosing || !isCustomSplitBalanced">
         <span class="btn-spinner" *ngIf="isSubmitting" aria-hidden="true"></span>
         {{ isSubmitting ? 'Wird gespeichert...' : 'Rechnung aufteilen' }}
       </button>

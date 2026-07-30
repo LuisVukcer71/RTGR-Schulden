@@ -108,11 +108,18 @@ async function initDB() {
         paid_by INT NOT NULL,
         created_by INT NOT NULL,
         date VARCHAR(50) NOT NULL DEFAULT 'Heute',
+        category VARCHAR(32) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (paid_by) REFERENCES users(id) ON DELETE CASCADE,
         FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
     `);
+
+    try {
+      await connection.query("ALTER TABLE expenses ADD COLUMN category VARCHAR(32) DEFAULT NULL");
+    } catch (err) {
+      if (err.code !== 'ER_DUP_FIELDNAME') throw err;
+    }
 
     await connection.query(`
       CREATE TABLE IF NOT EXISTS expense_splits (
@@ -370,10 +377,11 @@ app.get('/api/transactions', authenticateToken, async (req, res) => {
     const currentUserId = req.userId;
 
     const query = `
-      SELECT 
+      SELECT
         es.id,
         e.title AS reason,
         e.date,
+        e.category AS category,
         es.amount,
         es.is_paid AS isPaid,
         es.pending_confirmation AS pendingConfirmation,
@@ -404,6 +412,7 @@ app.get('/api/transactions', authenticateToken, async (req, res) => {
         person: otherPerson,
         reason: row.reason,
         date: row.date || 'Heute',
+        category: row.category || null,
         amount: Number(row.amount),
         isPaid: Boolean(row.isPaid),
         type: type,
@@ -425,7 +434,7 @@ app.post('/api/bills', authenticateToken, async (req, res) => {
     await connection.beginTransaction();
 
     const currentUserId = req.userId;
-    const { title, totalAmount, paidBy, participants, date } = req.body;
+    const { title, totalAmount, paidBy, participants, date, category, customSplits } = req.body;
 
     const totalAmountNum = Number(totalAmount);
 
@@ -439,6 +448,9 @@ app.post('/api/bills', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Der Betrag muss eine positive Zahl sein.' });
     }
 
+    const ALLOWED_CATEGORIES = ['food', 'shopping', 'transport', 'home', 'leisure', 'travel', 'other'];
+    const normalizedCategory = ALLOWED_CATEGORIES.includes(category) ? category : null;
+
     let paidById = currentUserId;
     if (paidBy !== 'Ich') {
       const [payerRows] = await connection.query('SELECT id FROM users WHERE username = ?', [paidBy]);
@@ -451,8 +463,8 @@ app.post('/api/bills', authenticateToken, async (req, res) => {
     }
 
     const [expenseResult] = await connection.query(
-      'INSERT INTO expenses (title, total_amount, paid_by, created_by, date) VALUES (?, ?, ?, ?, ?)',
-      [title.trim(), totalAmountNum, paidById, currentUserId, date || 'Heute']
+      'INSERT INTO expenses (title, total_amount, paid_by, created_by, date, category) VALUES (?, ?, ?, ?, ?, ?)',
+      [title.trim(), totalAmountNum, paidById, currentUserId, date || 'Heute', normalizedCategory]
     );
     const expenseId = expenseResult.insertId;
 
@@ -482,29 +494,67 @@ app.post('/api/bills', authenticateToken, async (req, res) => {
     // Duplikate entfernen (z.B. falls derselbe Teilnehmer zweimal ausgewählt wurde),
     // sonst würde dieselbe Person zweimal eine Schuld für dieselbe Rechnung bekommen.
     const uniqueParticipantIds = Array.from(new Set(participantIds));
-
-    // Aufteilung in Cent statt Fließkomma-Division, damit die Summe aller
-    // Anteile exakt totalAmount ergibt (kein Rundungsverlust wie z.B. bei
-    // 100 / 3 = 33.33 + 33.33 + 33.33 = 99.99). Der Rest-Cent wird auf die
-    // ersten Teilnehmer verteilt.
     const totalCents = Math.round(totalAmountNum * 100);
-    const participantCount = uniqueParticipantIds.length;
-    const baseCents = Math.floor(totalCents / participantCount);
-    const remainderCents = totalCents - baseCents * participantCount;
 
-    for (let i = 0; i < uniqueParticipantIds.length; i++) {
-      const debtorId = uniqueParticipantIds[i];
-      if (debtorId === paidById) {
-        continue;
+    if (customSplits && typeof customSplits === 'object' && !Array.isArray(customSplits)) {
+      // Benutzerdefinierte Aufteilung (exakte Beträge oder vom Frontend
+      // bereits aus Prozenten in € umgerechnet). Summe muss exakt dem
+      // Gesamtbetrag entsprechen (1 Cent Toleranz für Rundung).
+      const centsById = new Map();
+      let sumCents = 0;
+
+      for (const p of participants) {
+        const id = p === 'Ich' ? currentUserId : usernameToIdMap.get(p);
+        const rawAmount = Number(customSplits[p]);
+        if (!Number.isFinite(rawAmount) || rawAmount < 0) {
+          await connection.rollback();
+          connection.release();
+          return res.status(400).json({ error: `Ungültiger Betrag für "${p}".` });
+        }
+        const cents = Math.round(rawAmount * 100);
+        centsById.set(id, (centsById.get(id) || 0) + cents);
+        sumCents += cents;
       }
 
-      const shareCents = baseCents + (i < remainderCents ? 1 : 0);
-      const shareAmount = shareCents / 100;
+      if (Math.abs(sumCents - totalCents) > 1) {
+        await connection.rollback();
+        connection.release();
+        return res.status(400).json({ error: 'Die Aufteilung ergibt nicht den Gesamtbetrag.' });
+      }
 
-      await connection.query(
-        'INSERT INTO expense_splits (expense_id, creditor_id, debtor_id, amount) VALUES (?, ?, ?, ?)',
-        [expenseId, paidById, debtorId, shareAmount]
-      );
+      for (const debtorId of uniqueParticipantIds) {
+        if (debtorId === paidById) continue;
+        const cents = centsById.get(debtorId) || 0;
+        if (cents <= 0) continue;
+
+        await connection.query(
+          'INSERT INTO expense_splits (expense_id, creditor_id, debtor_id, amount) VALUES (?, ?, ?, ?)',
+          [expenseId, paidById, debtorId, cents / 100]
+        );
+      }
+    } else {
+      // Gleich-Aufteilung: Cent-basiert statt Fließkomma-Division, damit die
+      // Summe aller Anteile exakt totalAmount ergibt (kein Rundungsverlust
+      // wie z.B. bei 100 / 3 = 33.33 + 33.33 + 33.33 = 99.99). Der Rest-Cent
+      // wird auf die ersten Teilnehmer verteilt.
+      const participantCount = uniqueParticipantIds.length;
+      const baseCents = Math.floor(totalCents / participantCount);
+      const remainderCents = totalCents - baseCents * participantCount;
+
+      for (let i = 0; i < uniqueParticipantIds.length; i++) {
+        const debtorId = uniqueParticipantIds[i];
+        if (debtorId === paidById) {
+          continue;
+        }
+
+        const shareCents = baseCents + (i < remainderCents ? 1 : 0);
+        const shareAmount = shareCents / 100;
+
+        await connection.query(
+          'INSERT INTO expense_splits (expense_id, creditor_id, debtor_id, amount) VALUES (?, ?, ?, ?)',
+          [expenseId, paidById, debtorId, shareAmount]
+        );
+      }
     }
 
     await connection.commit();

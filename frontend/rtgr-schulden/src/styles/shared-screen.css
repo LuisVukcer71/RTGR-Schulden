@@ -240,11 +240,19 @@
 .transaction-card:nth-child(4) .card-inner { animation-delay: 80ms; }
 .transaction-card:nth-child(n+5) .card-inner { animation-delay: 100ms; }
 
+.card-info-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
 .card-info {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   text-align: left;
+  min-width: 0;
 }
 
 .title-row {

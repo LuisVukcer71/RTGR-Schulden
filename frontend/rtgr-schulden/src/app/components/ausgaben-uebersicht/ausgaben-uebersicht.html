@@ -96,20 +96,27 @@
         <div class="transaction-card" [class.is-paid-card]="item.isPaid">
           <app-bubble width="100%">
             <div class="card-inner">
-              
+
               <!-- Info Block -->
-              <div class="card-info">
-                <div class="title-row">
-                  <span class="card-title">{{ item.person }}</span>
-                  @if (item.isPaid) {
-                    <span class="paid-badge">Bezahlt</span>
-                  } @else if (item.pendingConfirmation) {
-                    <span class="paid-badge pending-badge" [class.pending-badge-mine]="item.confirmationInitiatedByMe">
-                      {{ item.confirmationInitiatedByMe ? 'Wartet auf Bestätigung' : 'Bitte bestätigen' }}
-                    </span>
-                  }
+              <div class="card-info-wrapper">
+                @if (item.category) {
+                  <div class="category-badge">
+                    <app-category-icon [categoryId]="item.category"></app-category-icon>
+                  </div>
+                }
+                <div class="card-info">
+                  <div class="title-row">
+                    <span class="card-title">{{ item.person }}</span>
+                    @if (item.isPaid) {
+                      <span class="paid-badge">Bezahlt</span>
+                    } @else if (item.pendingConfirmation) {
+                      <span class="paid-badge pending-badge" [class.pending-badge-mine]="item.confirmationInitiatedByMe">
+                        {{ item.confirmationInitiatedByMe ? 'Wartet auf Bestätigung' : 'Bitte bestätigen' }}
+                      </span>
+                    }
+                  </div>
+                  <span class="card-subtitle">{{ item.reason }} • {{ item.date }}</span>
                 </div>
-                <span class="card-subtitle">{{ item.reason }} • {{ item.date }}</span>
               </div>
 
               <!-- Betrag + Action Button -->

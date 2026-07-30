@@ -3,12 +3,13 @@ import { Bubble } from '../bubble/bubble';
 import { CurrencyPipe } from '@angular/common';
 import { TransactionService, Transaction } from '../../services/transaction.service';
 import { CountUpDirective } from '../../directives/count-up.directive';
+import { CategoryIconComponent } from '../category-icon/category-icon';
 
 type SettlementAction = 'request' | 'confirm' | 'cancel' | 'reopen';
 
 @Component({
   selector: 'app-ausgaben-uebersicht',
-  imports: [Bubble, CurrencyPipe, CountUpDirective],
+  imports: [Bubble, CurrencyPipe, CountUpDirective, CategoryIconComponent],
   templateUrl: './ausgaben-uebersicht.html',
   styleUrls: ['./ausgaben-uebersicht.css']
 })

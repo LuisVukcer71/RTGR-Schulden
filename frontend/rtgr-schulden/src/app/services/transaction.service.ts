@@ -8,6 +8,7 @@ export interface Transaction {
   person: string;
   reason: string;
   date: string;
+  category: string | null;
   amount: number;
   isPaid: boolean;
   type: 'owedToMe' | 'iOwe';
@@ -27,6 +28,10 @@ export interface SplitBillPayload {
   paidBy: string;
   participants: string[];
   date?: string;
+  category?: string | null;
+  /** Explizite Beträge pro Teilnehmer (Schlüssel = derselbe String wie in
+   *  `participants`, inkl. 'Ich'). Wird weggelassen für Gleich-Aufteilung. */
+  customSplits?: Record<string, number>;
 }
 
 type SettlementAction = 'request' | 'confirm' | 'cancel' | 'reopen';
