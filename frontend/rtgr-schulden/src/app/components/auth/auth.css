@@ -16,6 +16,7 @@
   height: 100%;
   padding: 2.5rem 1.5rem;
   box-sizing: border-box;
+  animation: appFadeIn var(--dur-slow) var(--ease-out) backwards;
 }
 
 /* Titel oben */
@@ -62,7 +63,7 @@ input {
   color: #ffffff;
   font-size: 0.95rem;
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard);
 }
 
 input::placeholder {
@@ -92,6 +93,7 @@ input.invalid:focus {
   font-size: 0.75rem;
   color: #f87171;
   padding-left: 2px;
+  animation: fieldErrorIn var(--dur-fast) var(--ease-out) both;
 }
 
 /* ==========================================
@@ -113,6 +115,12 @@ input.invalid:focus {
   font-weight: 500;
   cursor: pointer;
   outline: none;
+  transition: color var(--dur-fast) var(--ease-standard);
+}
+
+.remember-me-row:active {
+  transform: scale(0.98);
+  transition-duration: var(--dur-instant);
 }
 
 .remember-me-row:disabled {
@@ -130,7 +138,7 @@ input.invalid:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: background-color var(--dur-base) var(--ease-spring), border-color var(--dur-base) var(--ease-spring);
 }
 
 .checkbox-box svg {
@@ -139,23 +147,24 @@ input.invalid:focus {
   stroke: transparent;
   stroke-dasharray: 24;
   stroke-dashoffset: 24;
-  transition: stroke-dashoffset 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: stroke-dashoffset var(--dur-base) var(--ease-spring);
 }
 
 .checkbox-box.checked {
   background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
   border-color: transparent;
-  animation: checkboxPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: checkboxPop var(--dur-base) var(--ease-spring);
 }
 
 .checkbox-box.checked svg {
   stroke: #ffffff;
   stroke-dashoffset: 0;
+  transition-delay: 0.08s;
 }
 
 @keyframes checkboxPop {
   0% { transform: scale(1); }
-  40% { transform: scale(1.15); }
+  40% { transform: scale(1.18); }
   100% { transform: scale(1); }
 }
 
@@ -171,17 +180,25 @@ input.invalid:focus {
   border-radius: 50%;
   margin-right: 0.5rem;
   vertical-align: -2px;
-  animation: btnSpin 0.7s linear infinite;
+  animation: btnSpin 0.7s linear infinite, spinnerPopIn var(--dur-fast) var(--ease-spring) both;
 }
 
 @keyframes btnSpin {
   to { transform: rotate(360deg); }
 }
 
+@keyframes spinnerPopIn {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
 /* Haupt-Button: Kompakter & passend zu den Inputs */
 .btn-primary {
   margin-top: 0.5rem;
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background-color: #2563eb !important;
   color: #ffffff;
   border: none;
@@ -190,7 +207,7 @@ input.invalid:focus {
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  transition: background-color var(--dur-fast) var(--ease-standard), transform var(--dur-instant) var(--ease-spring);
 }
 
 .btn-primary:hover {
@@ -224,12 +241,17 @@ input.invalid:focus {
   margin-left: 0.3rem;
   padding: 0;
   font-size: 0.85rem;
-  transition: color 0.2s ease;
+  transition: color var(--dur-fast) var(--ease-standard);
 }
 
 .btn-link:hover {
   text-decoration: underline;
   color: #60a5fa;
+}
+
+.btn-link:active {
+  transform: scale(0.96);
+  display: inline-block;
 }
 
 .btn-link:disabled {
@@ -243,6 +265,7 @@ input.invalid:focus {
   font-size: 0.85rem;
   margin: -0.5rem 0 1rem 0;
   text-align: center;
+  animation: msgShakeIn var(--dur-slow) var(--ease-spring) both;
 }
 
 .msg-success {
@@ -250,4 +273,20 @@ input.invalid:focus {
   font-size: 0.85rem;
   margin: -0.5rem 0 1rem 0;
   text-align: center;
+  animation: fieldErrorIn var(--dur-base) var(--ease-out) both;
+}
+
+@keyframes fieldErrorIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Dezentes "Kopfschütteln" für Fehlermeldungen - lenkt kurz Aufmerksamkeit
+   auf sich, ohne aufdringlich zu wirken (klassisches iOS-Feedback-Muster). */
+@keyframes msgShakeIn {
+  0% { opacity: 0; transform: translateY(-4px); }
+  40% { opacity: 1; transform: translateX(-4px) translateY(0); }
+  60% { transform: translateX(3px); }
+  80% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
 }

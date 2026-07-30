@@ -1,7 +1,7 @@
 <div class="app-viewport">
 
-  <!-- HERO SALDO -->
-  <header class="saldo-hero" [class.hidden]="isScrolled">
+  <!-- HERO SALDO: Kollabiert kontinuierlich mit --scroll-progress (siehe CSS), keine Klassen-Bindung nötig. -->
+  <header class="saldo-hero">
     <span class="saldo-caption">OFFENER SALDO</span>
     <h1 class="saldo-display" [class.is-positive]="totalBalance >= 0" [class.is-negative]="totalBalance < 0">
       {{ totalBalance >= 0 ? '+' : '' }}{{ totalBalance | currency:'EUR':'symbol':'1.2-2' }}
@@ -9,7 +9,7 @@
   </header>
 
   <!-- STICKY HEADER GROUP (Beinhaltet Tabs + Filter) -->
-  <div class="scroll-header-group" [class.is-scrolled]="isScrolled">
+  <div class="scroll-header-group">
     <div class="scroll-header-content">
       
       <!-- NAV TABS -->

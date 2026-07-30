@@ -1,9 +1,10 @@
-import { Component, HostListener, ChangeDetectorRef, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, ChangeDetectorRef, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { Subscription, filter } from 'rxjs';
 import { TabMenuComponent } from '../tab-menu/tab-menu';
 import { AddBillComponent } from '../add-bill/add-bill';
+import { ScrollProgressService } from '../../services/scroll-progress.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -15,11 +16,11 @@ import { AddBillComponent } from '../add-bill/add-bill';
 export class Dashboard implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private router = inject(Router);
+  private scrollProgress = inject(ScrollProgressService);
   private routerEventsSub?: Subscription;
 
   isAddBillModalOpen = false;
   activeTab = 'expenses';
-  isScrolled = false;
 
   navTabs = [
     { id: 'expenses', label: 'Schulden', iconPath: 'M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4 M4 6v12a2 2 0 0 0 2 2h14v-4 M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z' },
@@ -35,6 +36,12 @@ export class Dashboard implements OnInit, OnDestroy {
         this.updateActiveTabFromUrl();
         this.cdr.detectChanges();
       });
+
+    // Ein einziger, geteilter Scroll-Listener für die ganze App (statt pro
+    // Screen ein eigener) - treibt alle Scroll-gekoppelten Animationen
+    // (Saldo-Hero-Kollaps, FAB-Dock-Verschiebung, Header-Weichzeichner)
+    // kontinuierlich über eine CSS Custom Property.
+    this.scrollProgress.start();
   }
 
   ngOnDestroy(): void {
@@ -45,16 +52,6 @@ export class Dashboard implements OnInit, OnDestroy {
     const lastSegment = this.router.url.split('/').pop()?.split('?')[0] ?? '';
     if (this.navTabs.some(tab => tab.id === lastSegment)) {
       this.activeTab = lastSegment;
-    }
-  }
-
-  @HostListener('window:scroll', [])
-  onWindowScroll() {
-    const scrollPosition = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-    const newState = scrollPosition > 30;
-    if (this.isScrolled !== newState) {
-      this.isScrolled = newState;
-      this.cdr.detectChanges();
     }
   }
 

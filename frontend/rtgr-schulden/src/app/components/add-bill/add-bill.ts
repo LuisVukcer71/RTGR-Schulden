@@ -28,6 +28,10 @@ export class AddBillComponent implements OnInit {
   isSubmitting: boolean = false;
   errorMessage: string = '';
 
+  /** Spielt die Schließen-Animation ab, bevor die Component tatsächlich entfernt wird. */
+  isClosing: boolean = false;
+  private readonly closeAnimationMs = 200; // deckt sich mit --dur-fast in styles.css
+
   ngOnInit(): void {
     this.loadRegisteredFriends();
   }
@@ -102,7 +106,7 @@ export class AddBillComponent implements OnInit {
     this.transactionService.splitBill(billData).subscribe({
       next: () => {
         this.isSubmitting = false;
-        this.close.emit();
+        this.requestClose();
       },
       error: (err) => {
         console.error('Fehler beim Speichern der Rechnung:', err);
@@ -115,7 +119,15 @@ export class AddBillComponent implements OnInit {
 
   closeModal(): void {
     if (!this.isSubmitting) {
-      this.close.emit();
+      this.requestClose();
     }
+  }
+
+  /** Spielt die Sheet/Backdrop-Exit-Animation ab, bevor die Component entfernt wird. */
+  private requestClose(): void {
+    if (this.isClosing) return;
+    this.isClosing = true;
+    this.cdr.detectChanges();
+    setTimeout(() => this.close.emit(), this.closeAnimationMs);
   }
 }

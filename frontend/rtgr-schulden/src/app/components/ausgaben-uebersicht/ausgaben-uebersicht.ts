@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { Bubble } from '../bubble/bubble';
 import { CurrencyPipe } from '@angular/common';
 import { TransactionService, Transaction } from '../../services/transaction.service';
@@ -14,7 +14,6 @@ type SettlementAction = 'request' | 'confirm' | 'cancel' | 'reopen';
 export class AusgabenUebersichtComponent implements OnInit {
   activeTab: 'all' | 'owedToMe' | 'iOwe' = 'all';
   statusFilter: 'all' | 'open' | 'paid' = 'all';
-  isScrolled = false;
 
   private cdr = inject(ChangeDetectorRef);
 
@@ -36,25 +35,6 @@ export class AusgabenUebersichtComponent implements OnInit {
     });
     // ...und initial vom Backend laden.
     this.transactionService.loadTransactions();
-  }
-
-  /**
-   * Blendet die Saldo-Hero beim Scrollen ein/aus. Toggelt nur eine CSS-Klasse
-   * (die Kollaps-Animation übernimmt reines CSS via transition) - erzwingt
-   * keine eigene Scroll-Position mehr, damit das native Scroll-Momentum
-   * (insbesondere iOS Rubber-Banding) nicht gestört wird.
-   */
-  @HostListener('window:scroll')
-  onWindowScroll() {
-    const scrollY = window.scrollY;
-
-    if (scrollY > 40 && !this.isScrolled) {
-      this.isScrolled = true;
-      this.cdr.detectChanges();
-    } else if (scrollY <= 15 && this.isScrolled) {
-      this.isScrolled = false;
-      this.cdr.detectChanges();
-    }
   }
 
   get currentList(): Transaction[] {

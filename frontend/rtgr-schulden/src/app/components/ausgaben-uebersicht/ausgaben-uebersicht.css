@@ -1,33 +1,24 @@
 @import '../../../styles/shared-screen.css';
 
 /* ==========================================
-   1. SALDO HERO (FADEOUT & COLLAPSE)
+   1. SALDO HERO (kontinuierlicher Kollaps beim Scrollen)
+   Reagiert direkt auf --scroll-progress (0-1), von ScrollProgressService
+   per rAF geschrieben - keine Angular-Klassenbindung, kein CSS-Transition-
+   Lag: die Hero folgt dem Finger/Scrollrad 1:1, genau wie ein natives
+   iOS Large-Title, das beim Scrollen einklappt.
    ========================================== */
 .saldo-hero {
   position: relative;
   z-index: 2;
   width: 100%;
-  padding: 1.5rem 1rem 1.25rem 1rem;
+  padding: calc(1.5rem * (1 - var(--scroll-progress))) 1rem calc(1.25rem * (1 - var(--scroll-progress))) 1rem;
   text-align: center;
-  max-height: 140px;
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              padding 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  animation: slideDownHero 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
-  animation-delay: 0.05s;
-}
-
-.saldo-hero.hidden {
-  opacity: 0;
-  transform: translateY(-20px) scale(0.95);
-  max-height: 0;
-  padding: 0 1rem;
-  margin: 0;
-  pointer-events: none;
+  max-height: calc(140px * (1 - var(--scroll-progress)));
+  opacity: calc(1 - var(--scroll-progress));
+  transform: translateY(calc(var(--scroll-progress) * -16px)) scale(calc(1 - (var(--scroll-progress) * 0.06)));
   overflow: hidden;
+  animation: slideDownHero var(--dur-slow) var(--ease-spring) backwards;
+  animation-delay: 0.05s;
 }
 
 .saldo-caption {
@@ -46,7 +37,7 @@
   letter-spacing: -0.04em;
   line-height: 1;
   text-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
-  transition: color 0.4s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: color var(--dur-base) var(--ease-standard), transform var(--dur-base) var(--ease-spring);
 }
 
 .saldo-display:hover {
@@ -54,23 +45,7 @@
 }
 
 /* ==========================================
-   2. STICKY-HEADER SCROLL-VERHALTEN
-   (Basis-Look kommt aus shared-screen.css, hier nur die Kollaps-Variante)
-   ========================================== */
-.scroll-header-group.is-scrolled {
-  width: 100%;
-  margin: 0 auto 1.25rem auto;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  padding: 0.25rem 0.5rem 0 0.5rem;
-}
-
-/* ==========================================
-   3. TRANSAKTIONS-KARTEN (bildschirmspezifische Zusätze)
+   2. TRANSAKTIONS-KARTEN (bildschirmspezifische Zusätze)
    ========================================== */
 .transaction-card.is-paid-card {
   opacity: 0.6;
@@ -86,7 +61,7 @@
   border: 1px solid rgba(16, 185, 129, 0.3);
   padding: 2px 6px;
   border-radius: 6px;
-  animation: popInBadge 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: popInBadge var(--dur-base) var(--ease-spring) both;
   animation-delay: 0.15s;
 }
 
@@ -108,7 +83,7 @@
 }
 
 /* ==========================================
-   4. QUICK SETTLE BUTTON
+   3. QUICK SETTLE BUTTON
    ========================================== */
 .settle-btn {
   appearance: none;
@@ -122,7 +97,9 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: border-color var(--dur-fast) var(--ease-standard),
+              background-color var(--dur-fast) var(--ease-standard),
+              transform var(--dur-fast) var(--ease-spring);
   padding: 0;
   outline: none;
   position: relative;
@@ -134,17 +111,22 @@
   transform: scale(1.1);
 }
 
+.settle-btn:active {
+  transform: scale(0.9);
+  transition-duration: var(--dur-instant);
+}
+
 .settle-btn svg {
   width: 16px;
   height: 16px;
   stroke: transparent;
-  transition: stroke 0.3s ease;
+  transition: stroke var(--dur-fast) var(--ease-standard);
 }
 
 .settle-btn svg polyline {
   stroke-dasharray: 24;
   stroke-dashoffset: 24;
-  transition: stroke-dashoffset 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: stroke-dashoffset var(--dur-base) var(--ease-spring);
 }
 
 .settle-btn:hover svg {
@@ -154,7 +136,7 @@
 .settle-btn.checked {
   background: #10b981;
   border-color: #10b981;
-  animation: checkPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: checkPop var(--dur-base) var(--ease-spring) forwards;
 }
 
 .settle-btn.checked svg {
@@ -163,7 +145,7 @@
 
 .settle-btn.checked svg polyline {
   stroke-dashoffset: 0;
-  transition-delay: 0.1s;
+  transition-delay: 0.12s;
 }
 
 .settle-btn.pending-mine {
@@ -191,7 +173,7 @@
 .settle-btn.pending-theirs {
   border-color: #38bdf8;
   background: rgba(56, 189, 248, 0.15);
-  animation: pulseConfirm 1.4s infinite ease-in-out;
+  animation: pulseConfirm 1.4s infinite var(--ease-in-out);
 }
 
 .settle-btn.pending-theirs svg {
@@ -205,7 +187,7 @@
 }
 
 /* ==========================================
-   5. KEYFRAMES (bildschirmspezifisch)
+   4. KEYFRAMES (bildschirmspezifisch)
    ========================================== */
 @keyframes slideDownHero {
   from { opacity: 0; transform: translateY(-15px); }

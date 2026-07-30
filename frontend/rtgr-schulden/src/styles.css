@@ -20,3 +20,41 @@ body {
   color: white;
   font-family: 'Trebuchet MS', sans-serif;
 }
+
+/* ==========================================
+   MOTION-DESIGN-TOKENS
+   Eine Quelle der Wahrheit für Timing/Easing der gesamten App. Custom
+   Properties vererben sich (anders als Regeln) durch Angulars
+   Style-Encapsulation hindurch - jede Komponente kann var(--ease-out) etc.
+   nutzen, ohne shared-screen.css importieren zu müssen.
+   ========================================== */
+:root {
+  /* Dauer */
+  --dur-instant: 120ms;
+  --dur-fast: 200ms;
+  --dur-base: 320ms;
+  --dur-slow: 450ms;
+  --dur-hero: 600ms;
+
+  /* Kurven */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);     /* Content-Entrance, "settled" - Apple-typisches Ease-Out */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* Federnde Pops: Toggles, Badges, aktive Zustände */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* Einfache Hover-/Farb-Übergänge */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* Symmetrisch: Modals/Sheets rein & raus */
+
+  /* Kontinuierlicher Scroll-Fortschritt (0 = oben, 1 = voll gescrollt),
+     wird von ScrollProgressService per rAF auf <html> geschrieben. Jede
+     Komponente kann darauf direkt per calc() reagieren, ganz ohne eigenen
+     Scroll-Listener oder Change Detection. */
+  --scroll-progress: 0;
+}
+
+/* Reduced-Motion: System-Einstellung respektieren statt Animationen aufzudrängen. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
