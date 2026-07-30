@@ -1,14 +1,14 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { Bubble } from '../bubble/bubble';
-import { CurrencyPipe } from '@angular/common';
 import { FriendService, FriendItem, FriendStatistics } from '../../services/friend.service';
+import { CountUpDirective } from '../../directives/count-up.directive';
 
 /** Toleranz für Geldbeträge: Rundungsreste (z.B. 0.004) gelten als ausgeglichen. */
 const BALANCE_EPSILON = 0.005;
 
 @Component({
   selector: 'app-friends',
-  imports: [Bubble, CurrencyPipe],
+  imports: [Bubble, CountUpDirective],
   templateUrl: './friends.html',
   styleUrls: ['./friends.css']
 })

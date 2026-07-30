@@ -1,4 +1,4 @@
-<div class="light-cone-wrapper">
+<div class="light-cone-wrapper" [class.mood-positive]="balanceMood === 'positive'" [class.mood-negative]="balanceMood === 'negative'">
   <div class="light-edge-line"></div>
   <div class="light-cone-main"></div>
   <div class="light-cone-ambient"></div>

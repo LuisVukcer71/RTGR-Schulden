@@ -3,9 +3,11 @@
   <!-- HERO SALDO: Kollabiert kontinuierlich mit --scroll-progress (siehe CSS), keine Klassen-Bindung nötig. -->
   <header class="saldo-hero">
     <span class="saldo-caption">OFFENER SALDO</span>
-    <h1 class="saldo-display" [class.is-positive]="totalBalance >= 0" [class.is-negative]="totalBalance < 0">
-      {{ totalBalance >= 0 ? '+' : '' }}{{ totalBalance | currency:'EUR':'symbol':'1.2-2' }}
-    </h1>
+    <h1 class="saldo-display"
+        [class.is-positive]="totalBalance >= 0"
+        [class.is-negative]="totalBalance < 0"
+        [countUp]="totalBalance"
+        countUpPrefixPositive="+"></h1>
   </header>
 
   <!-- STICKY HEADER GROUP (Beinhaltet Tabs + Filter) -->
@@ -134,6 +136,16 @@
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                     <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
+                  @if (justSettledIds.has(item.id)) {
+                    <span class="burst" aria-hidden="true">
+                      <span class="burst-particle" style="--i: 0"></span>
+                      <span class="burst-particle" style="--i: 1"></span>
+                      <span class="burst-particle" style="--i: 2"></span>
+                      <span class="burst-particle" style="--i: 3"></span>
+                      <span class="burst-particle" style="--i: 4"></span>
+                      <span class="burst-particle" style="--i: 5"></span>
+                    </span>
+                  }
                 </button>
               </div>
 

@@ -5,6 +5,11 @@ import { Subscription, filter } from 'rxjs';
 import { TabMenuComponent } from '../tab-menu/tab-menu';
 import { AddBillComponent } from '../add-bill/add-bill';
 import { ScrollProgressService } from '../../services/scroll-progress.service';
+import { TransactionService } from '../../services/transaction.service';
+
+/** Ab diesem Betrag gilt die Stimmung als eindeutig positiv/negativ - kleine
+ *  Restsalden lassen den Ambient-Hintergrund bewusst neutral/blau. */
+const MOOD_THRESHOLD = 1;
 
 @Component({
   selector: 'app-dashboard',
@@ -17,10 +22,15 @@ export class Dashboard implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private router = inject(Router);
   private scrollProgress = inject(ScrollProgressService);
+  private transactionService = inject(TransactionService);
   private routerEventsSub?: Subscription;
+  private balanceSub?: Subscription;
 
   isAddBillModalOpen = false;
   activeTab = 'expenses';
+
+  /** Treibt die Farbstimmung des Lichtkegel-Hintergrunds (siehe dashboard.css). */
+  balanceMood: 'positive' | 'negative' | 'neutral' = 'neutral';
 
   navTabs = [
     { id: 'expenses', label: 'Schulden', iconPath: 'M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4 M4 6v12a2 2 0 0 0 2 2h14v-4 M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z' },
@@ -42,10 +52,22 @@ export class Dashboard implements OnInit, OnDestroy {
     // (Saldo-Hero-Kollaps, FAB-Dock-Verschiebung, Header-Weichzeichner)
     // kontinuierlich über eine CSS Custom Property.
     this.scrollProgress.start();
+
+    // Ambient-Hintergrund reagiert dezent auf den Gesamtsaldo: leicht ins
+    // Grüne, wenn insgesamt mehr Geld an dich fließt, leicht ins Warme,
+    // wenn du insgesamt mehr schuldest.
+    this.balanceSub = this.transactionService.totalBalance$.subscribe(balance => {
+      const nextMood = balance > MOOD_THRESHOLD ? 'positive' : balance < -MOOD_THRESHOLD ? 'negative' : 'neutral';
+      if (nextMood !== this.balanceMood) {
+        this.balanceMood = nextMood;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   ngOnDestroy(): void {
     this.routerEventsSub?.unsubscribe();
+    this.balanceSub?.unsubscribe();
   }
 
   private updateActiveTabFromUrl(): void {

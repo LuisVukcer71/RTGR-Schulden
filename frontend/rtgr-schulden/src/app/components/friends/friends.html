@@ -97,10 +97,9 @@
                     class="card-amount"
                     [class.is-positive]="friend.balance > 0"
                     [class.is-negative]="friend.balance < 0"
-                  >
-                    {{ friend.balance >= 0 ? '+' : ''
-                    }}{{ friend.balance | currency: 'EUR' : 'symbol' : '1.2-2' }}
-                  </span>
+                    [countUp]="friend.balance"
+                    countUpPrefixPositive="+"
+                  ></span>
                 </div>
               </div>
             </app-bubble>
@@ -120,26 +119,20 @@
 
             <div class="info-row">
               <span class="info-row-label">Gesamtausgaben</span>
-              <span class="info-row-value is-negative">
-                {{ friendStats?.totalSpent | currency: 'EUR' : 'symbol' : '1.2-2' }}
-              </span>
+              <span class="info-row-value is-negative" [countUp]="friendStats?.totalSpent ?? 0"></span>
             </div>
 
             <div class="info-row">
               <span class="info-row-label">Erhaltene Beträge</span>
-              <span class="info-row-value is-positive">
-                {{ friendStats?.totalReceived | currency: 'EUR' : 'symbol' : '1.2-2' }}
-              </span>
+              <span class="info-row-value is-positive" [countUp]="friendStats?.totalReceived ?? 0"></span>
             </div>
 
             <div class="info-row">
               <span class="info-row-label">Durchschnitt pro Freund</span>
-              <span class="info-row-value">
-                {{
-                  (friendStats?.totalSpent ?? 0) / (friendStats?.activeFriendsCount || 1)
-                    | currency: 'EUR' : 'symbol' : '1.2-2'
-                }}
-              </span>
+              <span
+                class="info-row-value"
+                [countUp]="(friendStats?.totalSpent ?? 0) / (friendStats?.activeFriendsCount || 1)"
+              ></span>
             </div>
 
             <div class="info-row">

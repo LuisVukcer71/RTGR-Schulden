@@ -58,3 +58,35 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* ==========================================
+   VIEW TRANSITIONS - echter Seitenmorph bei jeder Routen-Navigation
+   (Login<->Dashboard, Tab-Wechsel). Ersetzt den bisherigen harten Schnitt
+   durch einen Zoom-Blur-Überblend-Effekt. Läuft nativ im Browser (kein JS,
+   keine Angular-Animations-Library nötig), Browser ohne Unterstützung
+   navigieren einfach ohne Übergang weiter.
+   ========================================== */
+::view-transition-old(root) {
+  animation: viewTransitionOut var(--dur-slow) var(--ease-in-out) both;
+}
+
+::view-transition-new(root) {
+  animation: viewTransitionIn var(--dur-slow) var(--ease-out) both;
+}
+
+@keyframes viewTransitionOut {
+  from { opacity: 1; transform: scale(1); filter: blur(0); }
+  to { opacity: 0; transform: scale(1.04); filter: blur(10px); }
+}
+
+@keyframes viewTransitionIn {
+  from { opacity: 0; transform: scale(0.96); filter: blur(10px); }
+  to { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}

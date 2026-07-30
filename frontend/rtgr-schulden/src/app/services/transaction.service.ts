@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, map, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface Transaction {
@@ -41,6 +41,16 @@ export class TransactionService {
   // statt eigene, lokale Kopien der Liste zu halten.
   private transactionsSubject = new BehaviorSubject<Transaction[]>([]);
   readonly transactions$ = this.transactionsSubject.asObservable();
+
+  /** Offener Gesamtsaldo über alle unbezahlten Posten - für die
+   *  stimmungs-gekoppelte Hintergrund-Ambiance im Dashboard-Shell. */
+  readonly totalBalance$: Observable<number> = this.transactions$.pipe(
+    map(transactions =>
+      transactions
+        .filter(item => !item.isPaid)
+        .reduce((sum, item) => (item.type === 'owedToMe' ? sum + item.amount : sum - item.amount), 0)
+    )
+  );
 
   constructor(private http: HttpClient) {}
 

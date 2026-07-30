@@ -14,6 +14,21 @@
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
+  /* Stimmungs-Ambiance: der Hintergrund färbt sich dezent um, je nachdem
+     ob insgesamt mehr Geld an dich fließt oder du insgesamt mehr
+     schuldest. hue-rotate() statt zwei komplett unterschiedlicher
+     Gradients, weil Browser zwischen Gradients nicht sauber überblenden,
+     einen filter()-Wert aber zuverlässig animieren. */
+  filter: hue-rotate(0deg) saturate(1);
+  transition: filter var(--dur-hero) var(--ease-in-out);
+}
+
+.light-cone-wrapper.mood-positive {
+  filter: hue-rotate(-50deg) saturate(1.3);
+}
+
+.light-cone-wrapper.mood-negative {
+  filter: hue-rotate(25deg) saturate(1.2);
 }
 
 .light-edge-line {

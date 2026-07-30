@@ -11,6 +11,10 @@
    ========================================== */
 
 .app-viewport {
+  /* Kein eigenes Entrance mehr: die View-Transitions-API (styles.css)
+     übernimmt jetzt den Seitenübergang beim Routenwechsel global - ein
+     zusätzliches lokales Fade-in hier würde sich mit dem Seitenmorph
+     überlagern. */
   position: relative;
   display: flex;
   flex-direction: column;
@@ -23,7 +27,6 @@
   color: #f8fafc;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   z-index: 1;
-  animation: appFadeIn var(--dur-slow) var(--ease-out) backwards;
 }
 
 /* ==========================================

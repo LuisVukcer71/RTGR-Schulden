@@ -2,18 +2,28 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { Bubble } from '../bubble/bubble';
 import { CurrencyPipe } from '@angular/common';
 import { TransactionService, Transaction } from '../../services/transaction.service';
+import { CountUpDirective } from '../../directives/count-up.directive';
 
 type SettlementAction = 'request' | 'confirm' | 'cancel' | 'reopen';
 
 @Component({
   selector: 'app-ausgaben-uebersicht',
-  imports: [Bubble, CurrencyPipe],
+  imports: [Bubble, CurrencyPipe, CountUpDirective],
   templateUrl: './ausgaben-uebersicht.html',
   styleUrls: ['./ausgaben-uebersicht.css']
 })
 export class AusgabenUebersichtComponent implements OnInit {
   activeTab: 'all' | 'owedToMe' | 'iOwe' = 'all';
   statusFilter: 'all' | 'open' | 'paid' = 'all';
+
+  /**
+   * IDs, für die gerade (durch eine "confirm"-Aktion in dieser Sitzung)
+   * der Partikel-Burst laufen soll. Bewusst getrennt von item.isPaid:
+   * isPaid bleibt dauerhaft true, dieses Flag ist nur ein kurzes,
+   * selbstlöschendes Trigger-Signal, damit der Burst nicht bei jedem
+   * Neuladen für bereits bezahlte Posten mit abfeuert.
+   */
+  justSettledIds = new Set<string>();
 
   private cdr = inject(ChangeDetectorRef);
 
@@ -112,6 +122,15 @@ export class AusgabenUebersichtComponent implements OnInit {
     };
 
     Object.assign(item, optimisticChanges);
+
+    if (action === 'confirm') {
+      this.justSettledIds.add(item.id);
+      setTimeout(() => {
+        this.justSettledIds.delete(item.id);
+        this.cdr.detectChanges();
+      }, 900);
+    }
+
     this.cdr.detectChanges();
 
     const call$ =
