@@ -40,10 +40,12 @@
   margin-right: calc(50% - 50vw);
   margin-bottom: 1.25rem;
   padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 1rem 0.75rem 1rem;
-  background-color: rgba(10, 10, 10, 0.75);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  /* Header-Chrome schwebt über dem Hintergrund, statt als schwarze
+     Vollfläche wie ein separater Kasten zu wirken. */
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.38) 0%, rgba(15, 23, 42, 0) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.10);
 }
 
 .scroll-header-content {

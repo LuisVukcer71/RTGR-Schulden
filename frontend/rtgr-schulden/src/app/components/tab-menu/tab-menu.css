@@ -97,7 +97,10 @@ app-bubble {
   border-radius: 12px;
   border: 1px solid rgba(59, 130, 246, 0.4);
   box-shadow: 0 0 12px rgba(37, 99, 235, 0.2);
-  z-index: -1;
+  /* Eigenständiger, dauerhaft sichtbarer Layer hinter den Tab-Inhalten.
+     Ein negativer z-index fiel nach einer View-Transition hinter die
+     gesamte Navigation und ließ den Rahmen verschwinden. */
+  z-index: 0;
   pointer-events: none;
   transform: scaleX(0.82);
   transform-origin: center;
