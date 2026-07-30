@@ -1,9 +1,10 @@
 /* ==========================================
    HINTERGRUND
-   Ruhiger, statischer Verlauf - bewusst OHNE Endlosschleifen-Animation.
-   Ein Hintergrund, der ständig in Bewegung ist, lenkt über eine lange
-   Nutzungssitzung hinweg ab; native Apple-UIs halten die Bühne ruhig und
-   heben Bewegung für tatsächliche Zustandswechsel auf.
+   Aurora/Lichtstrahl oben. z-index bewusst ÜBER dem Karteninhalt
+   (.transactions-section liegt bei 2), aber UNTER der Nav-Bar (100) -
+   sonst verdecken hochscrollende Karten den Strahl, sobald sie in die
+   oberen ~400px wandern. pointer-events: none sorgt dafür, dass Taps
+   trotzdem ganz normal an die Karten darunter durchgereicht werden.
    ========================================== */
 .light-cone-wrapper {
   position: fixed;
@@ -12,7 +13,7 @@
   width: 100vw;
   height: 400px;
   pointer-events: none;
-  z-index: 0;
+  z-index: 5;
   overflow: hidden;
 }
 
