@@ -1,7 +1,10 @@
-import { Component, HostListener, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { Bubble } from '../bubble/bubble';
 import { CurrencyPipe } from '@angular/common';
 import { FriendService, FriendItem, FriendStatistics } from '../../services/friend.service';
+
+/** Toleranz für Geldbeträge: Rundungsreste (z.B. 0.004) gelten als ausgeglichen. */
+const BALANCE_EPSILON = 0.005;
 
 @Component({
   selector: 'app-friends',
@@ -11,8 +14,6 @@ import { FriendService, FriendItem, FriendStatistics } from '../../services/frie
 })
 export class FriendsComponent implements OnInit {
   activeTab: 'persons' | 'stats' = 'persons';
-  isScrolled = false;
-  private isAutoScrolling = false;
 
   private cdr = inject(ChangeDetectorRef);
   private friendService = inject(FriendService);
@@ -38,28 +39,8 @@ export class FriendsComponent implements OnInit {
     this.friendService.loadStatistics();
   }
 
-  @HostListener('window:scroll')
-  onWindowScroll() {
-    const scrollY = window.scrollY;
-
-    if (scrollY > 40 && !this.isScrolled && !this.isAutoScrolling) {
-      this.isScrolled = true;
-      this.isAutoScrolling = true;
-      this.cdr.detectChanges();
-
-      window.scrollTo({
-        top: 100,
-        behavior: 'smooth'
-      });
-
-      setTimeout(() => {
-        this.isAutoScrolling = false;
-      }, 400);
-    }
-    else if (scrollY <= 15 && this.isScrolled && !this.isAutoScrolling) {
-      this.isScrolled = false;
-      this.cdr.detectChanges();
-    }
+  isBalanced(balance: number): boolean {
+    return Math.abs(balance) < BALANCE_EPSILON;
   }
 
   get totalBalance(): number {

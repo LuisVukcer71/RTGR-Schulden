@@ -1,12 +1,12 @@
 <div class="auth-wrapper">
-  <bubble width="300px" height="400px">
+  <app-bubble width="300px" height="400px">
     
     <div class="auth-card-content">
       <h2 class="auth-title">
         {{ isLoginMode ? 'Willkommen' : 'Account erstellen' }}
       </h2>
-      <p *ngIf="errorMessage" class="msg-error">{{ errorMessage }}</p>
-      <p *ngIf="successMessage" class="msg-success">{{ successMessage }}</p>
+      <p *ngIf="errorMessage" class="msg-error" role="alert" aria-live="assertive">{{ errorMessage }}</p>
+      <p *ngIf="successMessage" class="msg-success" role="status" aria-live="polite">{{ successMessage }}</p>
 
       <form (ngSubmit)="onSubmit()" class="auth-form">
         <div class="form-group">
@@ -49,5 +49,5 @@
       </div>
     </div>
 
-  </bubble>
+  </app-bubble>
 </div>

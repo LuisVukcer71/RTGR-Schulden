@@ -30,29 +30,48 @@
       <!-- Wer hat bezahlt? -->
       <div class="input-group">
         <label>Bezahlt von</label>
-        <select [(ngModel)]="paidBy" class="styled-select" [disabled]="isSubmitting">
-          <option value="Ich">Ich</option>
-          <option *ngFor="let friend of friends" [value]="friend">{{ friend }}</option>
-        </select>
+        <div class="chips-grid" role="radiogroup" aria-label="Bezahlt von">
+          <button
+            type="button"
+            class="chip"
+            [class.active]="paidBy === 'Ich'"
+            [attr.aria-pressed]="paidBy === 'Ich'"
+            [disabled]="isSubmitting"
+            (click)="selectPayer('Ich')">
+            Ich
+          </button>
+          <button
+            type="button"
+            class="chip"
+            *ngFor="let friend of friends"
+            [class.active]="paidBy === friend"
+            [attr.aria-pressed]="paidBy === friend"
+            [disabled]="isSubmitting"
+            (click)="selectPayer(friend)">
+            {{ friend }}
+          </button>
+        </div>
       </div>
 
       <!-- Wer war dabei? (Chips Auswahl) -->
       <div class="input-group">
         <label>Beteiligte Personen ({{ selectedParticipants.length }})</label>
-        <div class="chips-grid">
-          <button 
-            type="button" 
-            class="chip" 
+        <div class="chips-grid" role="group" aria-label="Beteiligte Personen">
+          <button
+            type="button"
+            class="chip"
             [class.active]="selectedParticipants.includes('Ich')"
+            [attr.aria-pressed]="selectedParticipants.includes('Ich')"
             [disabled]="isSubmitting"
             (click)="toggleParticipant('Ich')">
             Ich
           </button>
-          <button 
-            type="button" 
-            class="chip" 
-            *ngFor="let friend of friends" 
+          <button
+            type="button"
+            class="chip"
+            *ngFor="let friend of friends"
             [class.active]="selectedParticipants.includes(friend)"
+            [attr.aria-pressed]="selectedParticipants.includes(friend)"
             [disabled]="isSubmitting"
             (click)="toggleParticipant(friend)">
             {{ friend }}
@@ -69,7 +88,7 @@
       </div>
 
       <!-- Fehlermeldung -->
-      <div class="error-box" *ngIf="errorMessage">
+      <div class="error-box" *ngIf="errorMessage" role="alert" aria-live="assertive">
         {{ errorMessage }}
       </div>
 

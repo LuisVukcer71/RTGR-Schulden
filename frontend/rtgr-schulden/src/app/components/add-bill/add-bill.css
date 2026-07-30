@@ -11,23 +11,6 @@
   to { transform: translateY(0); opacity: 1; }
 }
 
-:host,
-:host *,
-bubble,
-header,
-nav,
-main,
-section,
-div,
-span,
-p,
-ul,
-li {
-  background: transparent !important;
-  background-color: transparent !important;
-  box-sizing: border-box;
-}
-
 /* ==========================================
    2. MODAL BACKDROP & KARTE
    ========================================== */
@@ -123,8 +106,7 @@ li {
   letter-spacing: 0.05em;
 }
 
-.input-group input, 
-.styled-select {
+.input-group input {
   width: 100%;
   box-sizing: border-box;
   background-color: #0f172a !important;
@@ -141,8 +123,7 @@ li {
   color: #475569;
 }
 
-.input-group input:focus, 
-.styled-select:focus {
+.input-group input:focus {
   border-color: #38bdf8;
   box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
 }
@@ -165,11 +146,6 @@ li {
 .amount-input-wrapper input {
   padding-left: 2.1rem;
   font-weight: 700;
-}
-
-.styled-select option {
-  background: #0f172a;
-  color: #ffffff;
 }
 
 /* ==========================================
@@ -302,7 +278,6 @@ li {
  
 .chip:disabled,
 .input-group input:disabled,
-.styled-select:disabled,
 .btn-cancel:disabled,
 .close-btn:disabled {
   opacity: 0.5;

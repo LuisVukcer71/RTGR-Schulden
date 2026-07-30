@@ -18,18 +18,6 @@
   box-sizing: border-box;
 }
 
-/* Entfernt alle störenden Hintergrundfarben */
-.auth-card-content,
-.auth-title, 
-.auth-form, 
-.form-group,
-.toggle-box,
-label,
-span {
-  background: transparent !important;
-  background-color: transparent !important;
-}
-
 /* Titel oben */
 .auth-title {
   margin: 0 0 1.75rem 0;

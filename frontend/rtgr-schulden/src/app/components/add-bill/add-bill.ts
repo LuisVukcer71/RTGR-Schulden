@@ -52,6 +52,11 @@ export class AddBillComponent implements OnInit {
     });
   }
 
+  selectPayer(payer: string): void {
+    this.paidBy = payer;
+    this.cdr.detectChanges();
+  }
+
   toggleParticipant(friend: string): void {
     const index = this.selectedParticipants.indexOf(friend);
     if (index > -1) {

@@ -15,7 +15,6 @@ export class AusgabenUebersichtComponent implements OnInit {
   activeTab: 'all' | 'owedToMe' | 'iOwe' = 'all';
   statusFilter: 'all' | 'open' | 'paid' = 'all';
   isScrolled = false;
-  private isAutoScrolling = false;
 
   private cdr = inject(ChangeDetectorRef);
 
@@ -39,25 +38,20 @@ export class AusgabenUebersichtComponent implements OnInit {
     this.transactionService.loadTransactions();
   }
 
+  /**
+   * Blendet die Saldo-Hero beim Scrollen ein/aus. Toggelt nur eine CSS-Klasse
+   * (die Kollaps-Animation übernimmt reines CSS via transition) - erzwingt
+   * keine eigene Scroll-Position mehr, damit das native Scroll-Momentum
+   * (insbesondere iOS Rubber-Banding) nicht gestört wird.
+   */
   @HostListener('window:scroll')
   onWindowScroll() {
     const scrollY = window.scrollY;
 
-    if (scrollY > 40 && !this.isScrolled && !this.isAutoScrolling) {
+    if (scrollY > 40 && !this.isScrolled) {
       this.isScrolled = true;
-      this.isAutoScrolling = true;
       this.cdr.detectChanges();
-
-      window.scrollTo({
-        top: 100,
-        behavior: 'smooth'
-      });
-
-      setTimeout(() => {
-        this.isAutoScrolling = false;
-      }, 400);
-    }
-    else if (scrollY <= 15 && this.isScrolled && !this.isAutoScrolling) {
+    } else if (scrollY <= 15 && this.isScrolled) {
       this.isScrolled = false;
       this.cdr.detectChanges();
     }

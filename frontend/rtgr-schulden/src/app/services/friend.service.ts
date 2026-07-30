@@ -13,7 +13,7 @@ export interface FriendStatistics {
   totalSpent: number;
   totalReceived: number;
   activeFriendsCount: number;
-  // Füge hier weitere Statistik-Felder hinzu, je nachdem was dein Backend liefert
+  
 }
 
 @Injectable({

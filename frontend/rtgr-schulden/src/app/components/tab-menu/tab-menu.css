@@ -13,7 +13,7 @@
   overflow: visible !important;
 }
 
-bubble {
+app-bubble {
   overflow: visible !important;
   display: block;
   width: 100%;
@@ -33,7 +33,7 @@ bubble {
   background: transparent !important;
   border: none;
   outline: none !important;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 0.75rem;
   font-weight: 500;
   padding: 0.5rem 0.25rem;

@@ -1,18 +1,14 @@
+<div class="light-cone-wrapper">
+  <div class="light-edge-line"></div>
+  <div class="light-cone-main"></div>
+  <div class="light-cone-ambient"></div>
+</div>
+
 <div class="dashboard-wrapper">
   <app-add-bill *ngIf="isAddBillModalOpen" (close)="closeAddBillModal()"></app-add-bill>
-  
+
   <main class="content-area">
-    <div *ngIf="activeTab === 'expenses'">
-      <app-ausgaben-uebersicht></app-ausgaben-uebersicht>
-    </div>
-
-    <div *ngIf="activeTab === 'friends'">
-      <app-friends></app-friends>
-    </div>
-
-    <div *ngIf="activeTab === 'profile'">
-      <app-profile></app-profile>
-    </div>
+    <router-outlet></router-outlet>
   </main>
 
   <!-- UNTERE NAVIGATION CONTAINER -->

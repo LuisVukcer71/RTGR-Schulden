@@ -1,9 +1,3 @@
-<div class="light-cone-wrapper">
-  <div class="light-edge-line"></div>
-  <div class="light-cone-main"></div>
-  <div class="light-cone-ambient"></div>
-</div>
-
 <div class="app-viewport">
 
   <!-- HERO SALDO -->
@@ -20,12 +14,13 @@
       
       <!-- NAV TABS -->
       <nav class="sticky-tabs-container">
-        <bubble width="100%">
+        <app-bubble width="100%">
           <div class="segmented-control">
-            <button 
-              type="button" 
-              class="segment-btn" 
+            <button
+              type="button"
+              class="segment-btn"
               [class.active]="activeTab === 'all'"
+              [attr.aria-pressed]="activeTab === 'all'"
               (click)="activeTab = 'all'">
               <svg class="segment-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/>
@@ -33,10 +28,11 @@
               <span>Alle</span>
             </button>
 
-            <button 
-              type="button" 
-              class="segment-btn" 
+            <button
+              type="button"
+              class="segment-btn"
               [class.active]="activeTab === 'owedToMe'"
+              [attr.aria-pressed]="activeTab === 'owedToMe'"
               (click)="activeTab = 'owedToMe'">
               <svg class="segment-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <path d="M19 5L5 19M5 19H15M5 19V9" stroke-linecap="round" stroke-linejoin="round"/>
@@ -44,10 +40,11 @@
               <span>Erhalten</span>
             </button>
 
-            <button 
-              type="button" 
-              class="segment-btn" 
+            <button
+              type="button"
+              class="segment-btn"
               [class.active]="activeTab === 'iOwe'"
+              [attr.aria-pressed]="activeTab === 'iOwe'"
               (click)="activeTab = 'iOwe'">
               <svg class="segment-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <path d="M5 19L19 5M19 5H9M19 5V15" stroke-linecap="round" stroke-linejoin="round"/>
@@ -55,29 +52,32 @@
               <span>Schulden</span>
             </button>
           </div>
-        </bubble>
+        </app-bubble>
       </nav>
 
       <!-- SUB-FILTER CHIPS -->
       <div class="status-filter-bar">
-        <button 
+        <button
           type="button"
-          class="filter-pill" 
-          [class.active]="statusFilter === 'all'" 
+          class="filter-pill"
+          [class.active]="statusFilter === 'all'"
+          [attr.aria-pressed]="statusFilter === 'all'"
           (click)="statusFilter = 'all'">
           Alle
         </button>
-        <button 
+        <button
           type="button"
-          class="filter-pill" 
-          [class.active]="statusFilter === 'open'" 
+          class="filter-pill"
+          [class.active]="statusFilter === 'open'"
+          [attr.aria-pressed]="statusFilter === 'open'"
           (click)="statusFilter = 'open'">
           Offen
         </button>
-        <button 
+        <button
           type="button"
-          class="filter-pill" 
-          [class.active]="statusFilter === 'paid'" 
+          class="filter-pill"
+          [class.active]="statusFilter === 'paid'"
+          [attr.aria-pressed]="statusFilter === 'paid'"
           (click)="statusFilter = 'paid'">
           Erledigt
         </button>
@@ -91,7 +91,7 @@
     <div class="list-fade-wrapper">
       @for (item of currentList; track item.id) {
         <div class="transaction-card" [class.is-paid-card]="item.isPaid">
-          <bubble width="100%">
+          <app-bubble width="100%">
             <div class="card-inner">
               
               <!-- Info Block -->
@@ -138,14 +138,14 @@
               </div>
 
             </div>
-          </bubble>
+          </app-bubble>
         </div>
       } @empty {
-        <bubble width="100%">
+        <app-bubble width="100%">
           <div class="empty-state">
             Keine Transaktionen gefunden
           </div>
-        </bubble>
+        </app-bubble>
       }
     </div>
   </main>

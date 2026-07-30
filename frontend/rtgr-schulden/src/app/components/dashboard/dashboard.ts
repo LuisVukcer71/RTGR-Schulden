@@ -1,21 +1,21 @@
-import { Component, HostListener, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, HostListener, ChangeDetectorRef, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TabMenuComponent, TabItem } from '../tab-menu/tab-menu';
-import { AddBillComponent } from '../add-bill/add-bill'; 
-import { AusgabenUebersichtComponent } from '../ausgaben-uebersicht/ausgaben-uebersicht'; 
-import { FriendsComponent } from '../friends/friends';
-import { ProfileComponent } from "../profile/profile";
+import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
+import { Subscription, filter } from 'rxjs';
+import { TabMenuComponent } from '../tab-menu/tab-menu';
+import { AddBillComponent } from '../add-bill/add-bill';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, TabMenuComponent, AusgabenUebersichtComponent, AddBillComponent, FriendsComponent, ProfileComponent],
+  imports: [CommonModule, RouterOutlet, TabMenuComponent, AddBillComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
 })
-
-export class Dashboard {
+export class Dashboard implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
+  private router = inject(Router);
+  private routerEventsSub?: Subscription;
 
   isAddBillModalOpen = false;
   activeTab = 'expenses';
@@ -26,6 +26,27 @@ export class Dashboard {
     { id: 'friends', label: 'Freunde', iconPath: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75' },
     { id: 'profile', label: 'Profil', iconPath: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z' }
   ];
+
+  ngOnInit(): void {
+    this.updateActiveTabFromUrl();
+    this.routerEventsSub = this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.updateActiveTabFromUrl();
+        this.cdr.detectChanges();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.routerEventsSub?.unsubscribe();
+  }
+
+  private updateActiveTabFromUrl(): void {
+    const lastSegment = this.router.url.split('/').pop()?.split('?')[0] ?? '';
+    if (this.navTabs.some(tab => tab.id === lastSegment)) {
+      this.activeTab = lastSegment;
+    }
+  }
 
   @HostListener('window:scroll', [])
   onWindowScroll() {
@@ -38,8 +59,7 @@ export class Dashboard {
   }
 
   onTabChanged(tabId: string) {
-    this.activeTab = tabId;
-    this.cdr.detectChanges();
+    this.router.navigate(['/dashboard', tabId]);
   }
 
   openAddBillModal() {

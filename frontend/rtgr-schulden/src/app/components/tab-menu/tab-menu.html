@@ -1,11 +1,13 @@
-<nav class="mobile-tab-nav">
-  <bubble width="100%" height="72px">
-    <div class="tab-container">
-      <button 
-        *ngFor="let tab of tabs" 
-        type="button" 
+<nav class="mobile-tab-nav" aria-label="Hauptnavigation">
+  <app-bubble width="100%" height="72px">
+    <div class="tab-container" role="tablist">
+      <button
+        *ngFor="let tab of tabs"
+        type="button"
         class="tab-item"
+        role="tab"
         [class.active]="tab.id === activeTabId"
+        [attr.aria-selected]="tab.id === activeTabId"
         (click)="selectTab(tab.id)"
       >
         <!-- Schwebender Glow-Backdrop hinter dem aktiven Item -->
@@ -19,5 +21,5 @@
         <span class="tab-label">{{ tab.label }}</span>
       </button>
     </div>
-  </bubble>
+  </app-bubble>
 </nav>

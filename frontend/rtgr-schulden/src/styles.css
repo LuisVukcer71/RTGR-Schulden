@@ -1,25 +1,22 @@
 * {
-    background-color: rgb(10, 10, 10);
-    color: white;
-    font-family: 'Trebuchet MS', sans-serif;
-    margin: 0%;
+    margin: 0;
     box-sizing: border-box;
 }
 
-@keyframes viewSmoothEnter {
-  0% {
-    opacity: 0;
-    transform: translateY(8px) scale(0.99);
-    filter: blur(4px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
-  }
-}
-
-/* Wende das auf deine Haupt-View-Container an */
-.app-viewport {
-  animation: viewSmoothEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+/*
+ * Hintergrund/Textfarbe werden bewusst nur EINMAL hier gesetzt und laufen
+ * per CSS-Vererbung durch den ganzen Baum. Vorher setzte ein globales
+ * `* { background-color: ... }` jedem Element eine Hintergrundfarbe, die
+ * dann in praktisch jeder Komponente per `!important` wieder auf
+ * transparent zurückgekämpft werden musste. Ohne das Universal-Rule ist
+ * jedes Element von Haus aus transparent (CSS-Standardverhalten), die
+ * `!important`-Transparenz-Resets in den Komponenten sind dadurch
+ * überflüssig geworden.
+ */
+html,
+body {
+  min-height: 100%;
+  background-color: rgb(10, 10, 10);
+  color: white;
+  font-family: 'Trebuchet MS', sans-serif;
 }
