@@ -5,9 +5,10 @@ import { AusgabenUebersichtComponent } from './components/ausgaben-uebersicht/au
 import { FriendsComponent } from './components/friends/friends';
 import { ProfileComponent } from './components/profile/profile';
 import { authGuard } from './guards/auth-guard';
+import { guestGuard } from './guards/guest-guard';
 
 export const routes: Routes = [
-  { path: 'auth', component: AuthComponent },
+  { path: 'auth', component: AuthComponent, canActivate: [guestGuard] },
   {
     path: 'dashboard',
     component: Dashboard,

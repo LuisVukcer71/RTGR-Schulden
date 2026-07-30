@@ -1,21 +1,28 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
   <head>
     <meta charset="utf-8" />
     <title>RTGR Schulden</title>
     <base href="/" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="Schulden und Rechnungen mit Freunden fair aufteilen." />
+
+    <link rel="icon" type="image/svg+xml" href="/icons/logo.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png" />
     <link rel="manifest" href="/manifest.json" />
 
-    <!-- iOS Optimierungen (damit es auch auf dem iPhone perfekt läuft) -->
+    <!-- Android/Chrome: macht die App als "echte" installierbare PWA erkennbar -->
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- iOS-Optimierungen: ohne diese Tags installiert Safari nur einen
+         Browser-Shortcut statt einer eigenständigen App ohne Safari-UI. -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="App" />
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    <meta name="apple-mobile-web-app-title" content="RTGR" />
+    <link rel="apple-touch-icon" href="/icons/icon-180.png" />
 
-    <!-- Theme Farbe für die Browser-Leiste beim Laden -->
-    <meta name="theme-color" content="#0f172a" />
+    <!-- Theme-Farbe für Statusleiste/Browser-Chrome, deckt sich mit dem App-Hintergrund -->
+    <meta name="theme-color" content="#0a0a0a" />
   </head>
   <body>
     <app-root></app-root>
