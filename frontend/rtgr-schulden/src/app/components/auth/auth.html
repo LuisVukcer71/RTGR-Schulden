@@ -8,42 +8,84 @@
       <p *ngIf="errorMessage" class="msg-error" role="alert" aria-live="assertive">{{ errorMessage }}</p>
       <p *ngIf="successMessage" class="msg-success" role="status" aria-live="polite">{{ successMessage }}</p>
 
-      <form (ngSubmit)="onSubmit()" class="auth-form">
+      <form (ngSubmit)="onSubmit()" class="auth-form" novalidate>
         <div class="form-group">
           <label for="username">Name</label>
-          <input 
-            type="text" 
-            id="username" 
-            [(ngModel)]="username" 
-            name="username" 
+          <input
+            type="text"
+            id="username"
+            [(ngModel)]="username"
+            name="username"
             placeholder="Dein Name"
             autocomplete="username"
+            [disabled]="isLoading"
+            [class.invalid]="usernameModel.invalid && (usernameModel.touched || submitted)"
             required
+            #usernameModel="ngModel"
           >
+          <span
+            class="field-error"
+            role="alert"
+            *ngIf="usernameModel.invalid && (usernameModel.touched || submitted)"
+          >
+            Bitte gib einen Namen ein.
+          </span>
         </div>
 
         <div class="form-group">
           <label for="password">Passwort</label>
-          <input 
-            type="password" 
-            id="password" 
-            [(ngModel)]="password" 
-            name="password" 
+          <input
+            type="password"
+            id="password"
+            [(ngModel)]="password"
+            name="password"
             placeholder="••••••••"
-            autocomplete="current-password"
+            [attr.autocomplete]="isLoginMode ? 'current-password' : 'new-password'"
+            [disabled]="isLoading"
+            [class.invalid]="passwordModel.invalid && (passwordModel.touched || submitted)"
             required
+            minlength="6"
+            #passwordModel="ngModel"
           >
+          <span
+            class="field-error"
+            role="alert"
+            *ngIf="passwordModel.invalid && (passwordModel.touched || submitted)"
+          >
+            {{ passwordModel.errors?.['minlength']
+              ? 'Passwort muss mindestens ' + minPasswordLength + ' Zeichen haben.'
+              : 'Bitte gib ein Passwort ein.' }}
+          </span>
         </div>
 
-        <button type="submit" class="btn-primary">
-          {{ isLoginMode ? 'Anmelden' : 'Registrieren' }}
+        <button
+          type="button"
+          class="remember-me-row"
+          *ngIf="isLoginMode"
+          [disabled]="isLoading"
+          [attr.aria-pressed]="rememberMe"
+          (click)="rememberMe = !rememberMe"
+        >
+          <span class="checkbox-box" [class.checked]="rememberMe">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </span>
+          <span>Angemeldet bleiben</span>
+        </button>
+
+        <button type="submit" class="btn-primary" [disabled]="isLoading">
+          <span class="btn-spinner" *ngIf="isLoading" aria-hidden="true"></span>
+          {{ isLoading
+            ? (isLoginMode ? 'Wird angemeldet...' : 'Wird registriert...')
+            : (isLoginMode ? 'Anmelden' : 'Registrieren') }}
         </button>
       </form>
 
       <!-- Registrieren / Anmelden Toggle -->
       <div class="toggle-box">
         <span>{{ isLoginMode ? 'Noch kein Konto?' : 'Bereits registriert?' }}</span>
-        <button type="button" (click)="toggleMode()" class="btn-link">
+        <button type="button" (click)="toggleMode()" class="btn-link" [disabled]="isLoading">
           {{ isLoginMode ? 'Jetzt erstellen' : 'Zum Login' }}
         </button>
       </div>

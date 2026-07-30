@@ -12,12 +12,16 @@ export class AuthService {
   private transactionService = inject(TransactionService);
   private apiUrl = environment.apiUrl;
 
-  login(username: string, password: string): Observable<any> {
+  /**
+   * @param rememberMe true (Standard) = Token in localStorage, übersteht einen
+   *   Browser-Neustart. false = Token nur in sessionStorage, verschwindet
+   *   sobald der Tab/Browser geschlossen wird ("Angemeldet bleiben"-Checkbox).
+   */
+  login(username: string, password: string, rememberMe: boolean = true): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/login`, { username, password }).pipe(
       tap(res => {
         if (res.token) {
-          localStorage.setItem('auth_token', res.token);
-          localStorage.setItem('user', JSON.stringify(res.user));
+          this.setSession(res.token, res.user, rememberMe);
 
           // Gecachten State der vorherigen Session (anderer User im
           // selben Tab) verwerfen und sofort mit dem neuen Token die
@@ -36,6 +40,8 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
+    sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('user');
 
     // Verhindert, dass beim nächsten Login (anderer User, selber Tab)
     // noch Transaktionsdaten des ausgeloggten Users sichtbar sind.
@@ -43,7 +49,7 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem('auth_token');
+    return localStorage.getItem('auth_token') ?? sessionStorage.getItem('auth_token');
   }
 
   isLoggedIn(): boolean {
@@ -51,8 +57,21 @@ export class AuthService {
   }
 
   getCurrentUser(): { id: number; username: string } | null {
-    const user = localStorage.getItem('user');
+    const user = localStorage.getItem('user') ?? sessionStorage.getItem('user');
     return user ? JSON.parse(user) : null;
+  }
+
+  private setSession(token: string, user: unknown, persist: boolean): void {
+    const target = persist ? localStorage : sessionStorage;
+    const other = persist ? sessionStorage : localStorage;
+
+    // Alte Session aus dem jeweils anderen Storage entfernen, damit nicht
+    // zwei widersprüchliche Tokens gleichzeitig herumliegen.
+    other.removeItem('auth_token');
+    other.removeItem('user');
+
+    target.setItem('auth_token', token);
+    target.setItem('user', JSON.stringify(user));
   }
 
   getUsers(): Observable<any[]> {
