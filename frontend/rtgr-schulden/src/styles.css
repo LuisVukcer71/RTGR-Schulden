@@ -21,6 +21,12 @@ body {
   font-family: 'Trebuchet MS', sans-serif;
 }
 
+html:has(body.modal-open),
+body.modal-open {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 /* ==========================================
    MOTION-SYSTEM
    Bewusst radikal minimal gehalten: genau zwei Kurven, genau drei Dauern

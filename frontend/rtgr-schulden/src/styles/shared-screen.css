@@ -73,10 +73,31 @@
 }
 
 .segmented-control {
+  --segment-count: 3;
   display: flex;
+  position: relative;
   padding: 4px;
   gap: 4px;
   width: 100%;
+}
+
+.segmented-control.segments-two {
+  --segment-count: 2;
+}
+
+.segment-active-indicator {
+  position: absolute;
+  top: 4px;
+  left: calc(4px + ((100% - 8px) / var(--segment-count)) * var(--active-segment-index));
+  width: calc((100% - 8px) / var(--segment-count));
+  height: calc(100% - 8px);
+  transform: scaleX(0.96);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.96));
+  border: 1px solid rgba(59, 130, 246, 0.62);
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.28), inset 0 1px rgba(186, 230, 253, 0.10);
+  pointer-events: none;
+  transition: left var(--dur-slow) var(--ease-emphasized);
 }
 
 .segment-btn {
@@ -116,9 +137,7 @@
 }
 
 .segment-btn.active::before {
-  opacity: 1;
-  border-color: rgba(59, 130, 246, 0.6);
-  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.25);
+  opacity: 0;
 }
 
 .segment-icon {

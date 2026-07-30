@@ -3,12 +3,6 @@
   <!-- Solange die Freundesliste noch lädt, zeigt sich nur der abgedunkelte
        Hintergrund + ein Ladeindikator - die Sheet erscheint erst, wenn
        die Daten wirklich da sind, statt erst leer und dann nachladend. -->
-  @if (isLoadingFriends) {
-    <div class="modal-loading" aria-live="polite">
-      <span class="btn-spinner" aria-hidden="true"></span>
-      <span>Wird geladen...</span>
-    </div>
-  } @else {
   <div class="modal-card" [class.closing]="isClosing" (click)="$event.stopPropagation()">
 
     <!-- Header -->
@@ -50,6 +44,9 @@
             (click)="selectPayer('Ich')">
             Ich
           </button>
+          @if (isLoadingFriends) {
+            <span class="chips-loading" aria-live="polite"><span class="btn-spinner" aria-hidden="true"></span>Freunde werden geladen</span>
+          } @else {
           <button
             type="button"
             class="chip"
@@ -60,6 +57,7 @@
             (click)="selectPayer(friend)">
             {{ friend }}
           </button>
+          }
         </div>
       </div>
 
@@ -76,6 +74,9 @@
             (click)="toggleParticipant('Ich')">
             Ich
           </button>
+          @if (isLoadingFriends) {
+            <span class="chips-loading" aria-live="polite"><span class="btn-spinner" aria-hidden="true"></span>Freunde werden geladen</span>
+          } @else {
           <button
             type="button"
             class="chip"
@@ -86,6 +87,7 @@
             (click)="toggleParticipant(friend)">
             {{ friend }}
           </button>
+          }
         </div>
       </div>
 
@@ -114,5 +116,4 @@
     </div>
 
   </div>
-  }
 </div>

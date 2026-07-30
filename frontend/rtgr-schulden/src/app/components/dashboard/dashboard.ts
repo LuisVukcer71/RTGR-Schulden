@@ -45,6 +45,7 @@ export class Dashboard implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.routerEventsSub?.unsubscribe();
+    document.body.classList.remove('modal-open');
   }
 
   private updateActiveTabFromUrl(): void {
@@ -60,11 +61,13 @@ export class Dashboard implements OnInit, OnDestroy {
 
   openAddBillModal() {
     this.isAddBillModalOpen = true;
+    document.body.classList.add('modal-open');
     this.cdr.detectChanges(); // Öffnet das Menü sofort ohne Scroll-Zwang!
   }
 
   closeAddBillModal() {
     this.isAddBillModalOpen = false;
+    document.body.classList.remove('modal-open');
     this.cdr.detectChanges(); // Schließt das Menü sofort!
   }
 }

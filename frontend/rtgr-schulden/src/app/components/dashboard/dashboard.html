@@ -8,7 +8,7 @@
   <app-add-bill *ngIf="isAddBillModalOpen" (close)="closeAddBillModal()"></app-add-bill>
 
   <!-- Weicht sichtbar zurück, solange die Rechnungs-Sheet offen ist. -->
-  <div class="content-layer" [class.receding]="isAddBillModalOpen">
+  <div class="content-layer">
     <main class="content-area">
       <router-outlet></router-outlet>
     </main>

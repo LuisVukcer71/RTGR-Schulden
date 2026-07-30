@@ -11,8 +11,8 @@
 }
 
 @keyframes sheetPresent {
-  from { opacity: 0; transform: translateY(48px) scale(0.96); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
 @keyframes slideDown {
@@ -142,7 +142,7 @@
 .input-group,
 .preview-box,
 .modal-footer {
-  animation: sheetContentIn var(--dur-normal) var(--ease) both;
+  animation: none;
 }
 
 .modal-header { animation-delay: 70ms; }
@@ -152,6 +152,21 @@
 .input-group:nth-of-type(4) { animation-delay: 215ms; }
 .preview-box { animation-delay: 240ms; }
 .modal-footer { animation-delay: 270ms; }
+
+.chips-loading {
+  display: inline-flex;
+  align-items: center;
+  min-height: 31px;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.chips-loading .btn-spinner {
+  width: 13px;
+  height: 13px;
+  margin-right: 0.45rem;
+}
 
 .input-group label {
   font-size: 0.75rem;

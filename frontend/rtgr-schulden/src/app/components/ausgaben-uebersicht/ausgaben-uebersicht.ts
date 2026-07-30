@@ -16,6 +16,10 @@ export class AusgabenUebersichtComponent implements OnInit {
   activeTab: 'all' | 'owedToMe' | 'iOwe' = 'all';
   statusFilter: 'all' | 'open' | 'paid' = 'all';
 
+  get activeSegmentIndex(): number {
+    return this.activeTab === 'all' ? 0 : this.activeTab === 'owedToMe' ? 1 : 2;
+  }
+
   private cdr = inject(ChangeDetectorRef);
 
   // Nicht mehr hartcodiert: kommt jetzt live über den TransactionService,

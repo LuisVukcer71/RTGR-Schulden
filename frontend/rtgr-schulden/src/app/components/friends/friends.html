@@ -5,7 +5,8 @@
       <!-- NAV TABS -->
       <nav class="sticky-tabs-container">
         <app-bubble width="100%">
-          <div class="segmented-control">
+          <div class="segmented-control segments-two" [style.--active-segment-index]="activeSegmentIndex">
+            <div class="segment-active-indicator" aria-hidden="true"></div>
             <button
               type="button"
               class="segment-btn"

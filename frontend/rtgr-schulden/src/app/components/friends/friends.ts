@@ -15,6 +15,10 @@ const BALANCE_EPSILON = 0.005;
 export class FriendsComponent implements OnInit {
   activeTab: 'persons' | 'stats' = 'persons';
 
+  get activeSegmentIndex(): number {
+    return this.activeTab === 'persons' ? 0 : 1;
+  }
+
   private cdr = inject(ChangeDetectorRef);
   private friendService = inject(FriendService);
 
