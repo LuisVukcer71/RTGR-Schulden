@@ -1,6 +1,8 @@
 <div class="app-viewport">
 
-  <!-- HERO SALDO: verschwindet sauber bei minimalem Scroll (siehe .is-scrolled in CSS), keine Klassen-Bindung im Template nötig. -->
+  <!-- HERO SALDO: schrumpft/verblasst kontinuierlich mit der Scroll-Position
+       (an die Scroll-Distanz gekoppelte CSS-Animation, siehe ausgaben-uebersicht.css) -
+       keine Klassen-Bindung im Template nötig, läuft rein über CSS. -->
   <header class="saldo-hero">
     <span class="saldo-caption">OFFENER SALDO</span>
     <h1 class="saldo-display"
@@ -12,8 +14,23 @@
 
   <!-- STICKY HEADER GROUP (Beinhaltet Tabs + Filter) -->
   <div class="scroll-header-group">
+
+    <!-- KOMPAKTER SALDO: blendet genau dann ein, wenn der große Saldo oben
+         verschwindet - der Wert bleibt beim Scrollen durchgehend sichtbar,
+         wandert nur von "groß, oben" zu "klein, in der Leiste" (iOS-typisches
+         Large-Title-Collapse). Rein visuelles Echo derselben Zahl, daher
+         aria-hidden - Screenreader hätten sonst den Saldo doppelt gehört. -->
+    <div class="compact-saldo" aria-hidden="true">
+      <span class="compact-saldo-label">Saldo</span>
+      <span class="compact-saldo-value"
+            [class.is-positive]="totalBalance >= 0"
+            [class.is-negative]="totalBalance < 0"
+            [countUp]="totalBalance"
+            countUpPrefixPositive="+"></span>
+    </div>
+
     <div class="scroll-header-content">
-      
+
       <!-- NAV TABS -->
       <nav class="sticky-tabs-container">
         <app-bubble width="100%">

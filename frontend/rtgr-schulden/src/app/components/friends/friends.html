@@ -76,7 +76,7 @@
         @if (friendsList.length > 0) {
           <!-- Gesamtsaldo über alle Freunde - reine Wiederverwendung der
                bestehenden Karten-Bausteine, keine neue Komponente nötig. -->
-          <div class="transaction-card total-balance-card">
+          <div class="transaction-card total-balance-card" [class.is-positive]="totalBalance > 0" [class.is-negative]="totalBalance < 0">
             <app-bubble width="100%">
               <div class="card-inner">
                 <div class="card-info-wrapper">

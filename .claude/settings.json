@@ -15,7 +15,13 @@
       "Bash(node verify.mjs)",
       "Bash(npx -y -p playwright node verify.mjs)",
       "Bash(npm init *)",
-      "Bash(node verify2.mjs)"
+      "Bash(node verify2.mjs)",
+      "Bash(node scroll-timeline-check.mjs)",
+      "Bash(node verify-scroll.mjs)",
+      "Bash(node debug-scroll.mjs)",
+      "Bash(node debug-route.mjs)",
+      "Bash(node debug-scroll2.mjs)",
+      "Bash(node verify-friends.mjs)"
     ]
   }
 }

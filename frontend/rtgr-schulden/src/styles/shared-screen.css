@@ -32,8 +32,14 @@
 /* ==========================================
    NAV-BAR (STICKY HEADER GROUP)
    Echte, statische Full-Width-Leiste (bricht bewusst aus der 400px-Spalte
-   von .app-viewport aus) - fix oben, keine Scroll-Kopplung. Reines
-   Chrome bekommt keine Mount-Animation, nur tatsächlicher Inhalt tut das.
+   von .app-viewport aus) - fix oben. Reines Chrome bekommt keine
+   Mount-Animation, nur tatsächlicher Inhalt tut das.
+
+   EINE gezielte Scroll-Kopplung: eine hauchdünne Trennlinie blendet mit dem
+   Scrollen ein, sobald sich Karteninhalt darunter befindet - "schwebt frei"
+   bleibt der Ausgangszustand, "trennt sich sichtbar vom Inhalt" der Zustand
+   beim Scrollen. Läuft (wo unterstützt) über dieselbe Scroll-Timeline-Technik
+   wie der Saldo in ausgaben-uebersicht.css.
    ========================================== */
 .scroll-header-group {
   position: sticky;
@@ -46,7 +52,31 @@
      Aurora. Das macht die gesamte obere Zone leicht und offen. */
   background: transparent;
   border: 0;
+  border-bottom: 1px solid transparent;
   isolation: isolate;
+}
+
+@supports not (animation-timeline: scroll()) {
+  .scroll-header-group {
+    transition: border-color var(--dur-normal) var(--ease);
+  }
+
+  html.is-scrolled .scroll-header-group {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  .scroll-header-group {
+    animation: headerChromeReveal linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0px 80px;
+  }
+}
+
+@keyframes headerChromeReveal {
+  from { border-bottom-color: transparent; }
+  to { border-bottom-color: rgba(255, 255, 255, 0.08); }
 }
 
 .scroll-header-group::before {

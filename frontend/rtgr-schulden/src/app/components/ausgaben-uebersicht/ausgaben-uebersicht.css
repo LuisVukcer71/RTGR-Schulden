@@ -2,10 +2,21 @@
 
 /* ==========================================
    1. SALDO HERO
-   Verschwindet sauber bei minimalem Scroll (schon ab 1px) - binäre
-   .is-scrolled-Klasse auf <html> (ScrollStateService) + reine
-   CSS-Transition, statt kontinuierlich per JS bei jedem Scroll-Event
-   nachgeführt zu werden.
+   Schrumpft/verblasst KONTINUIERLICH mit der tatsächlichen Scroll-Distanz
+   (0-140px, die eigene Höhe der Hero) statt bei einem Schwellwert einfach
+   umzuschalten - "Large-Title-Collapse" wie bei iOS: der Saldo schrumpft
+   sichtbar unter dem Finger weg, während zeitgleich sein kompaktes Echo in
+   der Leiste einblendet (siehe .compact-saldo unten).
+
+   Läuft über animation-timeline: scroll(root) direkt im Compositor, ganz
+   ohne JS-Scroll-Handler. Genau DAS war früher bewusst vermieden worden
+   (siehe ScrollStateService-Kommentar: ein pro-Frame per JS aktualisierter
+   Wert folgte der unregelmäßigen Scroll-Event-Taktung und wirkte ruckelig)
+   - die native Scroll-Timeline hat dieses Problem nicht, weil der Browser
+   selbst die Animation an die Scroll-Position koppelt, nicht JS.
+
+   Browser ohne Unterstützung (siehe @supports unten) bekommen weiterhin
+   den bisherigen binären Fallback über die .is-scrolled-Klasse.
    ========================================== */
 .saldo-hero {
   position: relative;
@@ -16,6 +27,7 @@
   max-height: 140px;
   opacity: 1;
   transform: translateY(0);
+  transform-origin: top center;
   overflow: hidden;
   transition: opacity var(--dur-normal) var(--ease),
               transform var(--dur-normal) var(--ease),
@@ -24,13 +36,48 @@
   animation: contentIn var(--dur-normal) var(--ease) both;
 }
 
-html.is-scrolled .saldo-hero {
-  opacity: 0;
-  transform: translateY(-10px);
-  max-height: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  pointer-events: none;
+@supports not (animation-timeline: scroll()) {
+  html.is-scrolled .saldo-hero {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    pointer-events: none;
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  .saldo-hero {
+    /* contentIn bleibt die einmalige, zeitbasierte Eintritts-Animation beim
+       Mounten; saldoHeroCollapse läuft PARALLEL dazu und wird stattdessen
+       durchgehend von der Scroll-Position gesteuert (daher zwei
+       kommagetrennte Werte, positionsgleich über beide Deklarationen). */
+    animation: contentIn var(--dur-normal) var(--ease) both,
+               saldoHeroCollapse linear both;
+    animation-timeline: auto, scroll(root);
+    animation-range: normal, 0px 140px;
+    /* Die Transition oben würde nur noch mit der Scroll-Animation um
+       dieselben Eigenschaften konkurrieren - hier nicht mehr nötig. */
+    transition: none;
+  }
+}
+
+@keyframes saldoHeroCollapse {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    max-height: 140px;
+    padding-top: 1.5rem;
+    padding-bottom: 1.25rem;
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.82) translateY(-12px);
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
 }
 
 .saldo-caption {
@@ -40,6 +87,79 @@ html.is-scrolled .saldo-hero {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   display: block;
+}
+
+/* ==========================================
+   1b. KOMPAKTER SALDO IN DER LEISTE
+   Das Gegenstück zur schrumpfenden Hero: blendet genau synchron dazu ein
+   (dieselbe animation-range 0-140px, nur mit vertauschtem from/to), damit
+   der Saldo beim Scrollen NIE komplett verschwindet, sondern nahtlos von
+   "groß, oben" nach "klein, in der Leiste" wandert.
+   ========================================== */
+.compact-saldo {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.4rem;
+  max-height: 0;
+  margin-bottom: 0;
+  opacity: 0;
+  transform: translateY(6px);
+  overflow: hidden;
+}
+
+.compact-saldo-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.compact-saldo-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #f1f5f9;
+}
+
+@supports not (animation-timeline: scroll()) {
+  .compact-saldo {
+    transition: max-height var(--dur-normal) var(--ease),
+                margin-bottom var(--dur-normal) var(--ease),
+                opacity var(--dur-normal) var(--ease),
+                transform var(--dur-normal) var(--ease);
+  }
+
+  html.is-scrolled .compact-saldo {
+    max-height: 32px;
+    margin-bottom: 0.6rem;
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  .compact-saldo {
+    animation: compactSaldoReveal linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0px 140px;
+  }
+}
+
+@keyframes compactSaldoReveal {
+  from {
+    max-height: 0;
+    margin-bottom: 0;
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    max-height: 32px;
+    margin-bottom: 0.6rem;
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .saldo-display {

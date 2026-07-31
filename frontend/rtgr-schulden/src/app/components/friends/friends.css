@@ -25,13 +25,20 @@
   color: #10b981;
 }
 
-/* Gesamtsaldo-Karte: dezenter Akzent statt eines weiteren "Freundes" ohne
-   Avatar. Nur Elemente, die direkt im eigenen Template stehen (card-title) -
-   .bubble-container liegt im gekapselten Bubble-Template und ist von hier
-   aus nicht erreichbar (siehe :host-context-Regel in bubble.css für den
-   Fall, dass die Bubble selbst auf einen Vorfahren reagieren soll). */
-.total-balance-card .card-title {
-  color: #7dd3fc;
+/* Gesamtsaldo-Karte: der Titel färbt sich mit demselben Grün/Rot wie der
+   Betrag selbst (Guthaben insgesamt = grün, Schulden insgesamt = rot) -
+   vorher stand hier ein fixes Blau, das mit der eigentlichen Bedeutung
+   (positiv/negativ) nichts zu tun hatte und der Farbsprache des Rests der
+   App (nur Grün/Rot für Geld) widersprach. .bubble-container liegt im
+   gekapselten Bubble-Template und ist von hier aus nicht erreichbar (siehe
+   :host-context-Regel in bubble.css für den Fall, dass die Bubble selbst
+   auf einen Vorfahren reagieren soll). */
+.total-balance-card.is-positive .card-title {
+  color: #6ee7b7;
+}
+
+.total-balance-card.is-negative .card-title {
+  color: #fda4af;
 }
 
 /* ==========================================
@@ -43,6 +50,16 @@
 .info-card:nth-of-type(3) { animation-delay: 80ms; }
 .info-card:nth-of-type(4) { animation-delay: 120ms; }
 .info-card:nth-of-type(5) { animation-delay: 160ms; }
+
+/* Bug: die Statistik-Karten sind bare <app-bubble>-Elemente ohne
+   umschließendes .transaction-card (das normalerweise den margin-bottom
+   liefert) - dadurch klebten sie ohne jeden Abstand aneinander. Nur direkte
+   Kinder treffen, damit die Personen-Liste (dort liegt app-bubble eine
+   Ebene tiefer, in .transaction-card) unberührt bleibt. */
+.list-fade-wrapper > app-bubble {
+  display: block;
+  margin-bottom: 0.75rem;
+}
 
 .stats-empty {
   margin: 0;
