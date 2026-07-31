@@ -1,5 +1,6 @@
 require('dotenv').config();
 
+const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
@@ -91,7 +92,11 @@ async function initDB() {
     for (const column of [
       "ADD COLUMN token_version INT NOT NULL DEFAULT 0",
       "ADD COLUMN preferred_currency VARCHAR(3) NOT NULL DEFAULT 'EUR'",
-      "ADD COLUMN reduce_motion TINYINT(1) NOT NULL DEFAULT 0"
+      "ADD COLUMN reduce_motion TINYINT(1) NOT NULL DEFAULT 0",
+      // NULL = aktives Konto. Wird beim Löschen gesetzt statt die Zeile zu
+      // entfernen (siehe DELETE /api/profile) - verhindert, dass gemeinsame
+      // Rechnungen mit anderen Usern durch ON DELETE CASCADE mitgerissen werden.
+      "ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL"
     ]) {
       try {
         await connection.query(`ALTER TABLE users ${column}`);
@@ -178,9 +183,6 @@ async function authenticateToken(req, res, next) {
     if (users.length === 0 || users[0].token_version !== tokenVersion) {
       return res.status(403).json({ error: 'Sitzung nicht mehr gültig.' });
     }
-    if (false) {
-      return res.status(403).json({ error: 'Ungültiges oder abgelaufenes Token.' });
-    }
     req.userId = payload.userId;
     next();
   } catch (err) {
@@ -236,6 +238,10 @@ app.post('/api/login', authLimiter, async (req, res) => {
     }
 
     const user = users[0];
+    if (user.deleted_at) {
+      return res.status(401).json({ error: 'Ungültige Anmeldedaten.' });
+    }
+
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       return res.status(401).json({ error: 'Ungültige Anmeldedaten.' });
@@ -255,7 +261,9 @@ app.post('/api/login', authLimiter, async (req, res) => {
 
 app.get('/api/users', authenticateToken, async (req, res) => {
   try {
-    const [users] = await pool.query('SELECT id, username FROM users');
+    // Gelöschte (anonymisierte) Konten sollen für neue Rechnungen nicht mehr
+    // auswählbar sein, tauchen aber weiterhin korrekt in alten Transaktionen auf.
+    const [users] = await pool.query('SELECT id, username FROM users WHERE deleted_at IS NULL');
     res.json(users);
   } catch (err) {
     console.error('Fehler beim Laden der Benutzer:', err);
@@ -363,9 +371,27 @@ app.delete('/api/profile', authenticateToken, async (req, res) => {
     if (!users.length || !(await bcrypt.compare(currentPassword || '', users[0].password))) {
       return res.status(400).json({ error: 'Passwort ist nicht korrekt.' });
     }
-    await pool.query('DELETE FROM users WHERE id = ?', [req.userId]);
+
+    // Anonymisieren statt hart löschen: expenses/expense_splits hängen per
+    // ON DELETE CASCADE an users.id, ein echtes DELETE würde also auch alle
+    // gemeinsamen Rechnungen der GEGENSEITE mitreißen (z.B. "Bob schuldet
+    // Alice 50€" verschwindet ersatzlos, nur weil Alice ihr Konto löscht).
+    // Stattdessen: Name/Passwort unkenntlich machen, alle Sitzungen killen,
+    // Konto für Login und als Teilnehmer neuer Rechnungen sperren - alte
+    // Salden/Transaktionen bleiben für die jeweils andere Seite intakt.
+    const anonymizedUsername = `Gelöschtes Konto #${req.userId}-${crypto.randomBytes(3).toString('hex')}`;
+    const unusablePassword = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), SALT_ROUNDS);
+
+    await pool.query(
+      `UPDATE users
+       SET username = ?, password = ?, token_version = token_version + 1, deleted_at = NOW()
+       WHERE id = ?`,
+      [anonymizedUsername, unusablePassword, req.userId]
+    );
+
     res.json({ message: 'Konto wurde gelöscht.' });
   } catch (err) {
+    console.error('Fehler beim Löschen des Kontos:', err);
     res.status(500).json({ error: 'Konto konnte nicht gelöscht werden.' });
   }
 });
@@ -665,6 +691,10 @@ app.get('/api/friends', authenticateToken, async (req, res) => {
   try {
     const currentUserId = req.userId;
 
+    // Bewusst OHNE deleted_at-Filter: ein gelöschtes Konto kann noch einen
+    // offenen Saldo haben (siehe Anonymisierung statt Hard-Delete weiter
+    // unten) - der muss hier sichtbar bleiben, sonst "verschwindet" eine
+    // offene Schuld/Forderung nur weil die Gegenseite ihr Konto gelöscht hat.
     const [users] = await pool.query('SELECT id, username FROM users WHERE id != ?', [currentUserId]);
     const [splits] = await pool.query(`
       SELECT creditor_id, debtor_id, amount, is_paid 

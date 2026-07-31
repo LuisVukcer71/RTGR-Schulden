@@ -1,10 +1,11 @@
-import { Component, EventEmitter, Output, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit, OnDestroy, AfterViewInit, ElementRef, HostListener, inject, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TransactionService, SplitBillPayload } from '../../services/transaction.service';
 import { AuthService } from '../../services/auth';
 import { BILL_CATEGORIES, BillCategory } from '../../shared/bill-categories';
 import { CategoryIconComponent } from '../category-icon/category-icon';
+import { UserPreferencesService } from '../../services/user-preferences.service';
 
 type SplitMode = 'equal' | 'exact' | 'percent';
 
@@ -23,12 +24,22 @@ const LAST_CONFIG_KEY = 'rtgr_last_bill_config';
   templateUrl: './add-bill.html',
   styleUrls: ['./add-bill.css']
 })
-export class AddBillComponent implements OnInit {
+export class AddBillComponent implements OnInit, AfterViewInit, OnDestroy {
   @Output() close = new EventEmitter<void>();
+  /** Titel-Feld bekommt beim Öffnen automatisch den Fokus. */
+  @ViewChild('titleInput') titleInputRef?: ElementRef<HTMLInputElement>;
 
   private transactionService = inject(TransactionService);
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
+  private prefs = inject(UserPreferencesService);
+  private hostElement = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  /** Element, das vor dem Öffnen fokussiert war (i.d.R. der "+"-Button) - bekommt beim Schließen den Fokus zurück. */
+  private previouslyFocusedElement: HTMLElement | null = null;
+
+  /** Anzeige-Währung aus den Nutzer-Einstellungen statt hartkodiertem EUR. */
+  currency = this.prefs.currency;
 
   title: string = '';
   totalAmount: number | null = null;
@@ -56,6 +67,56 @@ export class AddBillComponent implements OnInit {
   ngOnInit(): void {
     this.loadRegisteredFriends();
     this.loadLastConfig();
+
+    this.prefs.currency$.subscribe(currency => {
+      this.currency = currency;
+      this.cdr.detectChanges();
+    });
+
+    this.previouslyFocusedElement = document.activeElement as HTMLElement | null;
+  }
+
+  ngAfterViewInit(): void {
+    // Erst nachdem die Sheet-Animation zu laufen begonnen hat fokussieren,
+    // sonst "springt" die Seite beim Öffnen durch den Browser-Autoscroll-zu-
+    // fokussiertem-Element-Mechanismus mitten in der Eintritts-Animation.
+    setTimeout(() => this.titleInputRef?.nativeElement.focus(), 50);
+  }
+
+  ngOnDestroy(): void {
+    this.previouslyFocusedElement?.focus?.();
+  }
+
+  @HostListener('keydown', ['$event'])
+  onKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.closeModal();
+      return;
+    }
+    if (event.key === 'Tab') {
+      this.trapFocus(event);
+    }
+  }
+
+  /** Einfacher Fokus-Trap: Tab/Shift+Tab bleibt innerhalb der Sheet, statt in die Seite dahinter zu wandern. */
+  private trapFocus(event: KeyboardEvent): void {
+    const focusable = this.hostElement.nativeElement.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length === 0) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const active = document.activeElement;
+
+    if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   loadRegisteredFriends(): void {

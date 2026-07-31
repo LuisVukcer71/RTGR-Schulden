@@ -1,5 +1,9 @@
 <div class="auth-wrapper">
-  <app-bubble width="300px" height="400px">
+  <!-- Keine feste height mehr: bei gleichzeitig sichtbaren Feldfehlern +
+       Fehlermeldung + "Angemeldet bleiben" konnte der Inhalt eine feste
+       400px-Karte sprengen und wurde unten abgeschnitten (bubble-container
+       hat overflow:hidden). Wächst jetzt mit dem Inhalt mit. -->
+  <app-bubble width="300px">
     
     <div class="auth-card-content">
       <h2 class="auth-title">

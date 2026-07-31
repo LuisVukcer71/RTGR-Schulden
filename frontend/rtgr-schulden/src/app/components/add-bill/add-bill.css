@@ -138,11 +138,16 @@
   gap: 0.4rem;
 }
 
+/* Gestaffeltes Einblenden der Sheet-Abschnitte (sheetContentIn weiter unten) -
+   Header zuerst, dann jede Input-Gruppe, dann Preview/Footer. War vorher
+   durch ein zusätzliches `animation: none` auf denselben Selektoren
+   überschrieben, wodurch die ganzen animation-delay-Werte wirkungslos waren
+   und der komplette Inhalt schlagartig mit der Sheet aufpoppte. */
 .modal-header,
 .input-group,
 .preview-box,
 .modal-footer {
-  animation: none;
+  animation: sheetContentIn var(--dur-normal) var(--ease) both;
 }
 
 .modal-header { animation-delay: 70ms; }
@@ -614,6 +619,25 @@
 .custom-split-reset:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ==========================================
+   8. TASTATUR-FOKUS
+   Alle Chips/Buttons haben `outline: none` (eigenes visuelles Active/Selected-
+   Feedback), verloren dadurch aber komplett den Fokusring für Tastatur-
+   Navigation. Zusammen mit dem Fokus-Trap in add-bill.ts sonst eine Falle:
+   man tabbt durch die Sheet, sieht aber nirgends, wo man gerade ist.
+   ========================================== */
+.chip:focus-visible,
+.category-chip:focus-visible,
+.split-mode-btn:focus-visible,
+.close-btn:focus-visible,
+.custom-split-reset:focus-visible,
+.last-config-chip:focus-visible,
+.btn-cancel:focus-visible,
+.btn-submit:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
 }
 
 .btn-submit:disabled {

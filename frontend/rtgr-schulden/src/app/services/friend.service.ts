@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface FriendItem {
@@ -29,6 +29,18 @@ export class FriendService {
 
   private statsSubject = new BehaviorSubject<FriendStatistics | null>(null);
   stats$ = this.statsSubject.asObservable();
+
+  /**
+   * Setzt den zwischengespeicherten State zurück. Ohne das würde beim
+   * Account-Wechsel im selben Browser-Tab (Logout -> anderer Login) kurz
+   * noch die Freundesliste/Statistik des VORHERIGEN Users angezeigt, weil
+   * BehaviorSubjects neuen Abonnenten sofort ihren letzten Wert liefern -
+   * spiegelt TransactionService.resetState().
+   */
+  resetState(): void {
+    this.friendsSubject.next([]);
+    this.statsSubject.next(null);
+  }
 
   loadFriends(): void {
     this.http.get<FriendItem[]>(this.apiUrl).subscribe({

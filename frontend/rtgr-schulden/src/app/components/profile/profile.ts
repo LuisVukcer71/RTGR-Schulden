@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Bubble } from '../bubble/bubble';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
+import { UserPreferencesService } from '../../services/user-preferences.service';
 
 @Component({
   selector: 'app-profile',
@@ -14,9 +15,12 @@ import { AuthService } from '../../services/auth';
 export class ProfileComponent implements OnInit {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private prefs = inject(UserPreferencesService);
 
   username = '';
-  preferredCurrency = 'EUR';
+  // Aus dem gecachten Service vorbelegt statt hart 'EUR'/false - vermeidet
+  // ein kurzes Aufblitzen des Standardzustands, bis getProfile() zurück ist.
+  preferredCurrency = this.prefs.currency;
   reduceMotion = false;
   currentPassword = '';
   newPassword = '';
@@ -33,8 +37,9 @@ export class ProfileComponent implements OnInit {
       next: profile => {
         this.username = profile.username;
         this.preferredCurrency = profile.preferredCurrency;
-        this.reduceMotion = profile.reduceMotion;
-        document.documentElement.classList.toggle('app-reduce-motion', this.reduceMotion);
+        this.reduceMotion = Boolean(profile.reduceMotion);
+        this.prefs.setCurrency(profile.preferredCurrency);
+        this.prefs.setReduceMotion(this.reduceMotion);
       },
       error: () => this.error = 'Profil konnte nicht geladen werden.'
     });
@@ -48,7 +53,8 @@ export class ProfileComponent implements OnInit {
   saveProfile(): void {
     this.run(this.auth.updateProfile({ username: this.username, preferredCurrency: this.preferredCurrency, reduceMotion: this.reduceMotion }),
       () => {
-        document.documentElement.classList.toggle('app-reduce-motion', this.reduceMotion);
+        this.prefs.setCurrency(this.preferredCurrency);
+        this.prefs.setReduceMotion(this.reduceMotion);
         this.message = 'Dein Profil wurde gespeichert.';
       });
   }
@@ -74,7 +80,14 @@ export class ProfileComponent implements OnInit {
       next: blob => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.href = url; link.download = 'schuldenapp-export.csv'; link.click();
+        link.href = url; link.download = 'schuldenapp-export.csv';
+        // Muss im DOM hängen, damit .click() zuverlässig einen Download
+        // auslöst - ohne append funktioniert das in Chrome/Firefox meist,
+        // auf Safari/iOS (wichtig hier: installierbare iOS-PWA) aber nicht
+        // zuverlässig.
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
         URL.revokeObjectURL(url);
         this.message = 'Dein CSV-Export wurde heruntergeladen.';
       }, error: () => this.error = 'Export konnte nicht erstellt werden.'

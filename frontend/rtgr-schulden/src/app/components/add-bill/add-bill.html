@@ -8,12 +8,14 @@
     <!-- Header -->
     <div class="modal-header">
       <h2>Neue Rechnung</h2>
-      <button class="close-btn" (click)="closeModal()" [disabled]="isSubmitting || isClosing">
+      <button type="button" class="close-btn" (click)="closeModal()" [disabled]="isSubmitting || isClosing">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
 
-    <!-- Formular -->
+    <!-- Formular: echtes <form>, damit Enter im Betrag-/Titel-Feld genau wie
+         beim Login absendet, statt nur auf den Klick auf den Button zu reagieren. -->
+    <form (ngSubmit)="submitBill()">
     <div class="modal-body">
 
       <!-- Wie beim letzten Mal -->
@@ -30,7 +32,7 @@
       <!-- Verwendungszweck -->
       <div class="input-group">
         <label>Wofür?</label>
-        <input type="text" [(ngModel)]="title" placeholder="z.B. Restaurant, Kino, Wocheneinkauf..." [disabled]="isSubmitting" />
+        <input #titleInput type="text" [(ngModel)]="title" [ngModelOptions]="{standalone: true}" placeholder="z.B. Restaurant, Kino, Wocheneinkauf..." [disabled]="isSubmitting" />
       </div>
 
       <!-- Kategorie -->
@@ -56,7 +58,7 @@
         <label>Gesamtbetrag</label>
         <div class="amount-input-wrapper">
           <span class="currency">€</span>
-          <input type="number" [(ngModel)]="totalAmount" placeholder="0.00" step="0.01" min="0.01" [disabled]="isSubmitting" />
+          <input type="number" [(ngModel)]="totalAmount" [ngModelOptions]="{standalone: true}" placeholder="0.00" step="0.01" min="0.01" [disabled]="isSubmitting" />
         </div>
       </div>
 
@@ -141,6 +143,7 @@
                 min="0"
                 [disabled]="isSubmitting"
                 [ngModel]="customAmounts[person]"
+                [ngModelOptions]="{standalone: true}"
                 (ngModelChange)="setCustomAmount(person, $event)"
               />
             </div>
@@ -148,7 +151,7 @@
           <div class="custom-split-footer">
             <button type="button" class="custom-split-reset" [disabled]="isSubmitting" (click)="distributeEqually()">Gleichmäßig verteilen</button>
             <span class="custom-split-balance" [class.is-balanced]="isCustomSplitBalanced">
-              {{ isCustomSplitBalanced ? 'Stimmt genau' : (customAmountsRemaining > 0 ? (customAmountsRemaining | currency:'EUR':'symbol':'1.2-2') + ' fehlen noch' : (-customAmountsRemaining | currency:'EUR':'symbol':'1.2-2') + ' zu viel') }}
+              {{ isCustomSplitBalanced ? 'Stimmt genau' : (customAmountsRemaining > 0 ? (customAmountsRemaining | currency:currency:'symbol':'1.2-2') + ' fehlen noch' : (-customAmountsRemaining | currency:currency:'symbol':'1.2-2') + ' zu viel') }}
             </span>
           </div>
         </div>
@@ -165,6 +168,7 @@
                 max="100"
                 [disabled]="isSubmitting"
                 [ngModel]="customPercents[person]"
+                [ngModelOptions]="{standalone: true}"
                 (ngModelChange)="setCustomPercent(person, $event)"
               />
               <span class="currency percent-sign">%</span>
@@ -183,7 +187,7 @@
       <div class="preview-box" *ngIf="totalAmount && selectedParticipants.length > 0 && (splitMode === 'equal' || selectedParticipants.length === 1)">
         <div class="preview-row">
           <span>Anteil pro Person:</span>
-          <span class="highlight-amount">{{ perPersonShare | currency:'EUR':'symbol':'1.2-2' }}</span>
+          <span class="highlight-amount">{{ perPersonShare | currency:currency:'symbol':'1.2-2' }}</span>
         </div>
       </div>
 
@@ -196,12 +200,13 @@
 
     <!-- Footer Actions -->
     <div class="modal-footer">
-      <button class="btn-cancel" (click)="closeModal()" [disabled]="isSubmitting || isClosing">Abbrechen</button>
-      <button class="btn-submit" (click)="submitBill()" [disabled]="isSubmitting || isClosing || !isCustomSplitBalanced">
+      <button type="button" class="btn-cancel" (click)="closeModal()" [disabled]="isSubmitting || isClosing">Abbrechen</button>
+      <button type="submit" class="btn-submit" [disabled]="isSubmitting || isClosing || !isCustomSplitBalanced">
         <span class="btn-spinner" *ngIf="isSubmitting" aria-hidden="true"></span>
         {{ isSubmitting ? 'Wird gespeichert...' : 'Rechnung aufteilen' }}
       </button>
     </div>
+    </form>
 
   </div>
 </div>

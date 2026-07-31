@@ -68,3 +68,10 @@
   border-color: transparent;
   box-shadow: none;
 }
+
+/* Gesamtsaldo-Karte (Freunde-Screen): dezenter blauer Akzent statt des
+   normalen Karten-Looks, damit sie klar als Summenzeile erkennbar ist. */
+:host-context(.total-balance-card) .bubble-container {
+  border-color: rgba(56, 189, 248, 0.35);
+  background: linear-gradient(145deg, #182028, #12161c) !important;
+}

@@ -3,6 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { TransactionService } from './transaction.service';
+import { UserPreferencesService } from './user-preferences.service';
+import { FriendService } from './friend.service';
 
 @Injectable({
   providedIn: 'root'
@@ -10,6 +12,8 @@ import { TransactionService } from './transaction.service';
 export class AuthService {
   private http = inject(HttpClient);
   private transactionService = inject(TransactionService);
+  private friendService = inject(FriendService);
+  private userPreferences = inject(UserPreferencesService);
   private apiUrl = environment.apiUrl;
 
   /**
@@ -28,9 +32,32 @@ export class AuthService {
           // Daten des jetzt eingeloggten Users frisch laden.
           this.transactionService.resetState();
           this.transactionService.loadTransactions();
+          this.friendService.resetState();
+
+          // Währung/Bewegung-reduzieren sofort laden - nicht erst, wenn der
+          // User zufällig die Profil-Seite öffnet (siehe applyPreferences()).
+          this.applyPreferences();
         }
       })
     );
+  }
+
+  /**
+   * Lädt einmal das Profil und wendet Währung + "Bewegung reduzieren" app-weit
+   * an. Wird beim Login aufgerufen UND beim App-Start, falls schon eine
+   * gültige Session existiert (siehe App-Root-Komponente) - vorher griff
+   * keine der beiden Einstellungen, bevor man aktiv den Profil-Tab öffnete.
+   */
+  applyPreferences(): void {
+    this.getProfile().subscribe({
+      next: profile => {
+        this.userPreferences.setCurrency(profile.preferredCurrency);
+        this.userPreferences.setReduceMotion(Boolean(profile.reduceMotion));
+      },
+      // Keine Aktion nötig: Service bleibt auf dem gecachten/Default-Wert,
+      // ProfileComponent versucht es beim Öffnen ohnehin erneut.
+      error: () => {}
+    });
   }
 
   register(username: string, password: string): Observable<any> {
@@ -44,8 +71,9 @@ export class AuthService {
     sessionStorage.removeItem('user');
 
     // Verhindert, dass beim nächsten Login (anderer User, selber Tab)
-    // noch Transaktionsdaten des ausgeloggten Users sichtbar sind.
+    // noch Transaktions-/Freundesdaten des ausgeloggten Users sichtbar sind.
     this.transactionService.resetState();
+    this.friendService.resetState();
   }
 
   getToken(): string | null {

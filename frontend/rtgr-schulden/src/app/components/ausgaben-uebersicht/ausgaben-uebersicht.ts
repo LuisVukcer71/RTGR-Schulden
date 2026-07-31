@@ -4,6 +4,7 @@ import { CurrencyPipe } from '@angular/common';
 import { TransactionService, Transaction } from '../../services/transaction.service';
 import { CountUpDirective } from '../../directives/count-up.directive';
 import { CategoryIconComponent } from '../category-icon/category-icon';
+import { UserPreferencesService } from '../../services/user-preferences.service';
 
 type SettlementAction = 'request' | 'confirm' | 'cancel' | 'reopen';
 
@@ -22,10 +23,17 @@ export class AusgabenUebersichtComponent implements OnInit {
   }
 
   private cdr = inject(ChangeDetectorRef);
+  private prefs = inject(UserPreferencesService);
 
   // Nicht mehr hartcodiert: kommt jetzt live über den TransactionService,
   // damit neu gesplittete Rechnungen sofort in der Liste erscheinen.
   transactions: Transaction[] = [];
+
+  /** Anzeige-Währung aus den Nutzer-Einstellungen statt hartkodiertem EUR. */
+  currency = this.prefs.currency;
+
+  /** Verhindert Doppel-Klicks auf denselben Settle-Button, während dessen eigene Anfrage noch läuft. */
+  private pendingActionIds = new Set<string>();
 
   constructor(private transactionService: TransactionService) {}
 
@@ -41,6 +49,15 @@ export class AusgabenUebersichtComponent implements OnInit {
     });
     // ...und initial vom Backend laden.
     this.transactionService.loadTransactions();
+
+    this.prefs.currency$.subscribe(currency => {
+      this.currency = currency;
+      this.cdr.detectChanges();
+    });
+  }
+
+  isActionPending(id: string): boolean {
+    return this.pendingActionIds.has(id);
   }
 
   get currentList(): Transaction[] {
@@ -66,6 +83,12 @@ export class AusgabenUebersichtComponent implements OnInit {
    */
   handleSettleClick(item: Transaction, event: Event): void {
     event.stopPropagation();
+
+    // Ohne diese Sperre könnte ein schnelles Mehrfach-Klicken mehrere,
+    // sich überlappende Settlement-Requests für dieselbe Karte auslösen -
+    // der optimistische Rollback geht aber von genau einer laufenden
+    // Aktion aus und würde bei Overlap den falschen Vorzustand wiederherstellen.
+    if (this.pendingActionIds.has(item.id)) return;
 
     if (item.isPaid) {
       this.performAction(item, 'reopen', {
@@ -118,6 +141,7 @@ export class AusgabenUebersichtComponent implements OnInit {
     };
 
     Object.assign(item, optimisticChanges);
+    this.pendingActionIds.add(item.id);
     this.cdr.detectChanges();
 
     const call$ =
@@ -127,9 +151,13 @@ export class AusgabenUebersichtComponent implements OnInit {
       this.transactionService.reopenTransaction(item.id);
 
     call$.subscribe({
+      next: () => {
+        this.pendingActionIds.delete(item.id);
+      },
       error: (err) => {
         console.error(`Fehler bei Aktion "${action}":`, err);
         Object.assign(item, previousState); // Rollback
+        this.pendingActionIds.delete(item.id);
         this.cdr.detectChanges();
       }
     });

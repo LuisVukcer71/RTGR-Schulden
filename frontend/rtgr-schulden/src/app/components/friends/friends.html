@@ -73,13 +73,38 @@
   <main class="transactions-section">
     <div class="list-fade-wrapper">
       @if (activeTab === 'persons') {
+        @if (friendsList.length > 0) {
+          <!-- Gesamtsaldo über alle Freunde - reine Wiederverwendung der
+               bestehenden Karten-Bausteine, keine neue Komponente nötig. -->
+          <div class="transaction-card total-balance-card">
+            <app-bubble width="100%">
+              <div class="card-inner">
+                <div class="card-info-wrapper">
+                  <div class="card-info">
+                    <span class="card-title">Gesamtsaldo</span>
+                    <span class="card-subtitle">Über alle Freunde zusammen</span>
+                  </div>
+                </div>
+                <div class="card-right-group">
+                  <span
+                    class="card-amount"
+                    [class.is-positive]="totalBalance > 0"
+                    [class.is-negative]="totalBalance < 0"
+                    [countUp]="totalBalance"
+                    countUpPrefixPositive="+"
+                  ></span>
+                </div>
+              </div>
+            </app-bubble>
+          </div>
+        }
         @for (friend of sortedFriendsList; track friend.id) {
           <div class="transaction-card">
             <app-bubble width="100%">
               <div class="card-inner">
                 <!-- Info Block mit Avatar -->
                 <div class="card-info-wrapper">
-                  <div class="friend-avatar">{{ friend.name.charAt(0) }}</div>
+                  <div class="friend-avatar">{{ friend.name.charAt(0).toUpperCase() }}</div>
                   <div class="card-info">
                     <div class="title-row">
                       <span class="card-title">{{ friend.name }}</span>

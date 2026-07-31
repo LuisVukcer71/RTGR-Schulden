@@ -25,6 +25,15 @@
   color: #10b981;
 }
 
+/* Gesamtsaldo-Karte: dezenter Akzent statt eines weiteren "Freundes" ohne
+   Avatar. Nur Elemente, die direkt im eigenen Template stehen (card-title) -
+   .bubble-container liegt im gekapselten Bubble-Template und ist von hier
+   aus nicht erreichbar (siehe :host-context-Regel in bubble.css für den
+   Fall, dass die Bubble selbst auf einen Vorfahren reagieren soll). */
+.total-balance-card .card-title {
+  color: #7dd3fc;
+}
+
 /* ==========================================
    STATISTIKEN: leichter Versatz zwischen den Karten, damit sie nicht alle
    exakt gleichzeitig auftauchen.

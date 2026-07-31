@@ -124,9 +124,16 @@ export class FriendsComponent implements OnInit {
 
   // ---------- Top-Anlässe ----------
 
+  /**
+   * Nur eigene Ausgaben (type 'iOwe'), keine Forderungen. Vorher wurden
+   * Beträge unabhängig von der Richtung aufsummiert - ein Anlass, der mal
+   * "ich zahle" und mal "mir wird gezahlt" war, ergab eine Summe ohne reale
+   * Bedeutung. "Top-Anlässe" soll zeigen, wofür DU dein Geld ausgibst.
+   */
   get topReasons(): ReasonStat[] {
     const byReason = new Map<string, ReasonStat>();
     for (const t of this.transactions) {
+      if (t.type !== 'iOwe') continue;
       const key = t.reason.trim().toLowerCase();
       if (!key) continue;
       const entry = byReason.get(key) ?? { reason: t.reason.trim(), count: 0, total: 0 };
@@ -153,9 +160,11 @@ export class FriendsComponent implements OnInit {
     return best;
   }
 
+  /** Größte eigene Ausgabe - nur 'iOwe', sonst könnte hier fälschlich eine Forderung (jemand schuldet DIR) als "Ausgabe" auftauchen. */
   get biggestTransaction(): Transaction | null {
-    if (this.transactions.length === 0) return null;
-    return this.transactions.reduce((max, t) => (t.amount > max.amount ? t : max), this.transactions[0]);
+    const expenses = this.transactions.filter(t => t.type === 'iOwe');
+    if (expenses.length === 0) return null;
+    return expenses.reduce((max, t) => (t.amount > max.amount ? t : max), expenses[0]);
   }
 
   get averageAmount(): number {

@@ -125,16 +125,17 @@
                       [class.is-positive]="item.type === 'owedToMe' && !item.isPaid" 
                       [class.is-negative]="item.type === 'iOwe' && !item.isPaid"
                       [class.is-settled]="item.isPaid">
-                  {{ item.type === 'owedToMe' ? '+' : '-' }}{{ item.amount | currency:'EUR':'symbol':'1.2-2' }}
+                  {{ item.type === 'owedToMe' ? '+' : '-' }}{{ item.amount | currency:currency:'symbol':'1.2-2' }}
                 </span>
 
                 <!-- Quick Action Button: steuert den kompletten Bestätigungs-Workflow -->
-                <button 
-                  type="button" 
-                  class="settle-btn" 
+                <button
+                  type="button"
+                  class="settle-btn"
                   [class.checked]="item.isPaid"
                   [class.pending-mine]="item.pendingConfirmation && item.confirmationInitiatedByMe"
                   [class.pending-theirs]="item.pendingConfirmation && !item.confirmationInitiatedByMe"
+                  [disabled]="isActionPending(item.id)"
                   (click)="handleSettleClick(item, $event)"
                   [title]="item.isPaid
                     ? 'Als offen markieren'
