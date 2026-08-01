@@ -1,5 +1,6 @@
 require('dotenv').config();
 
+const fs = require('fs');
 const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
@@ -9,6 +10,7 @@ const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
 if (!process.env.JWT_SECRET) {
@@ -55,9 +57,23 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
 
 // MySQL Verbindungspool (mit Umgebungsvariablen & SSL für Aiven)
+let dbSslConfig;
+if (process.env.DB_SSL_CA_PATH) {
+  try {
+    dbSslConfig = { ca: fs.readFileSync(process.env.DB_SSL_CA_PATH) };
+    console.log(`✅ SSL-Zertifikat geladen: ${process.env.DB_SSL_CA_PATH}`);
+  } catch (err) {
+    console.error(`❌ DB_SSL_CA_PATH ist gesetzt, aber die Datei "${process.env.DB_SSL_CA_PATH}" konnte nicht gelesen werden:`, err.message);
+    process.exit(1);
+  }
+} else {
+  console.warn('⚠️  DB_SSL_CA_PATH nicht gesetzt – SSL-Zertifikatsprüfung deaktiviert (nur für lokale Entwicklung akzeptabel).');
+  dbSslConfig = { rejectUnauthorized: false };
+}
+
 const pool = mysql.createPool({
   host: process.env.DB_HOST || '127.0.0.1',
   user: process.env.DB_USER || 'root',
@@ -68,9 +84,7 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   decimalNumbers: true,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  ssl: dbSslConfig
 });
 
 // Tabellen beim Start sicherstellen
@@ -137,12 +151,19 @@ async function initDB() {
         pending_confirmation TINYINT(1) DEFAULT 0,
         confirmation_initiated_by INT DEFAULT NULL,
         confirmed_at TIMESTAMP NULL DEFAULT NULL,
+        deleted_at TIMESTAMP NULL DEFAULT NULL,
         FOREIGN KEY (expense_id) REFERENCES expenses(id) ON DELETE CASCADE,
         FOREIGN KEY (creditor_id) REFERENCES users(id) ON DELETE CASCADE,
         FOREIGN KEY (debtor_id) REFERENCES users(id) ON DELETE CASCADE,
         FOREIGN KEY (confirmation_initiated_by) REFERENCES users(id) ON DELETE SET NULL
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
     `);
+
+    try {
+      await connection.query("ALTER TABLE expense_splits ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL");
+    } catch (err) {
+      if (err.code !== 'ER_DUP_FIELDNAME') throw err;
+    }
 
     connection.release();
     console.log('✅ Erfolgreich mit der MySQL-Datenbank verbunden & Tabellen überprüft!');
@@ -178,9 +199,14 @@ async function authenticateToken(req, res, next) {
 
   try {
     const payload = jwt.verify(token, JWT_SECRET);
+    // Tokens ohne tokenVersion-Claim (vor Einführung des Features ausgestellt)
+    // werden als ungültig behandelt, statt sie als version=0 durchzulassen –
+    // sonst greift Session-Invalidierung (Passwortänderung) nicht.
+    if (payload.tokenVersion === undefined) {
+      return res.status(401).json({ error: 'Sitzung abgelaufen. Bitte erneut anmelden.' });
+    }
     const [users] = await pool.query('SELECT token_version FROM users WHERE id = ?', [payload.userId]);
-    const tokenVersion = payload.tokenVersion ?? 0;
-    if (users.length === 0 || users[0].token_version !== tokenVersion) {
+    if (users.length === 0 || users[0].token_version !== payload.tokenVersion) {
       return res.status(403).json({ error: 'Sitzung nicht mehr gültig.' });
     }
     req.userId = payload.userId;
@@ -351,7 +377,7 @@ app.get('/api/profile/export', authenticateToken, async (req, res) => {
       JOIN expenses e ON es.expense_id = e.id
       JOIN users creditor ON creditor.id = es.creditor_id
       JOIN users debtor ON debtor.id = es.debtor_id
-      WHERE es.creditor_id = ? OR es.debtor_id = ? ORDER BY e.id DESC`, [req.userId, req.userId]);
+      WHERE (es.creditor_id = ? OR es.debtor_id = ?) AND es.deleted_at IS NULL ORDER BY e.id DESC`, [req.userId, req.userId]);
     const esc = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
     const csv = ['Datum,Titel,Betrag,Bezahlt,Gläubiger,Schuldner', ...rows.map(row =>
       [row.date, row.title, Number(row.amount).toFixed(2), row.isPaid ? 'Ja' : 'Nein', row.creditor, row.debtor].map(esc).join(',')
@@ -420,7 +446,7 @@ app.get('/api/transactions', authenticateToken, async (req, res) => {
       JOIN expenses e ON es.expense_id = e.id
       JOIN users creditor ON es.creditor_id = creditor.id
       JOIN users debtor ON es.debtor_id = debtor.id
-      WHERE es.creditor_id = ? OR es.debtor_id = ?
+      WHERE (es.creditor_id = ? OR es.debtor_id = ?) AND es.deleted_at IS NULL
       ORDER BY e.id DESC
     `;
 
@@ -460,7 +486,7 @@ app.post('/api/bills', authenticateToken, async (req, res) => {
     await connection.beginTransaction();
 
     const currentUserId = req.userId;
-    const { title, totalAmount, paidBy, participants, date, category, customSplits } = req.body;
+    const { title, totalAmount, participants, date, category, customSplits } = req.body;
 
     const totalAmountNum = Number(totalAmount);
 
@@ -477,16 +503,8 @@ app.post('/api/bills', authenticateToken, async (req, res) => {
     const ALLOWED_CATEGORIES = ['food', 'shopping', 'transport', 'home', 'leisure', 'travel', 'other'];
     const normalizedCategory = ALLOWED_CATEGORIES.includes(category) ? category : null;
 
-    let paidById = currentUserId;
-    if (paidBy !== 'Ich') {
-      const [payerRows] = await connection.query('SELECT id FROM users WHERE username = ?', [paidBy]);
-      if (payerRows.length === 0) {
-        await connection.rollback();
-        connection.release();
-        return res.status(400).json({ error: `Benutzer "${paidBy}" wurde nicht gefunden.` });
-      }
-      paidById = payerRows[0].id;
-    }
+    // Gläubiger ist immer der authentifizierte User (aus JWT), nie aus dem Body.
+    const paidById = currentUserId;
 
     const [expenseResult] = await connection.query(
       'INSERT INTO expenses (title, total_amount, paid_by, created_by, date, category) VALUES (?, ?, ?, ?, ?, ?)',
@@ -596,13 +614,23 @@ app.post('/api/bills', authenticateToken, async (req, res) => {
 });
 
 app.patch('/api/transactions/:id/settlement', authenticateToken, async (req, res) => {
+  const connection = await pool.getConnection();
   try {
+    await connection.beginTransaction();
+
     const splitId = req.params.id;
-    const { action } = req.body; 
+    const { action } = req.body;
     const currentUserId = req.userId;
 
-    const [splits] = await pool.query('SELECT * FROM expense_splits WHERE id = ?', [splitId]);
+    // FOR UPDATE sperrt die Zeile für die Dauer der Transaktion und verhindert
+    // Race Conditions bei parallelen Settlement-Requests (z.B. Doppelklick).
+    const [splits] = await connection.query(
+      'SELECT * FROM expense_splits WHERE id = ? AND deleted_at IS NULL FOR UPDATE',
+      [splitId]
+    );
     if (splits.length === 0) {
+      await connection.rollback();
+      connection.release();
       return res.status(404).json({ error: 'Transaktion nicht gefunden.' });
     }
 
@@ -611,54 +639,70 @@ app.patch('/api/transactions/:id/settlement', authenticateToken, async (req, res
     const isDebtor = split.debtor_id === currentUserId;
 
     if (!isCreditor && !isDebtor) {
+      await connection.rollback();
+      connection.release();
       return res.status(403).json({ error: 'Keine Berechtigung für diese Transaktion.' });
     }
 
     if (action === 'request') {
-      await pool.query(
+      await connection.query(
         'UPDATE expense_splits SET pending_confirmation = 1, confirmation_initiated_by = ? WHERE id = ?',
         [currentUserId, splitId]
       );
-    } 
+    }
     else if (action === 'confirm') {
       if (!split.pending_confirmation) {
+        await connection.rollback();
+        connection.release();
         return res.status(400).json({ error: 'Keine offene Bestätigungsanfrage vorhanden.' });
       }
       if (split.confirmation_initiated_by === currentUserId) {
+        await connection.rollback();
+        connection.release();
         return res.status(400).json({ error: 'Man kann seine eigene Anfrage nicht selbst bestätigen.' });
       }
 
-      await pool.query(
+      await connection.query(
         'UPDATE expense_splits SET is_paid = 1, pending_confirmation = 0, confirmation_initiated_by = NULL, confirmed_at = NOW() WHERE id = ?',
         [splitId]
       );
     }
     else if (action === 'cancel') {
       if (!split.pending_confirmation || split.confirmation_initiated_by !== currentUserId) {
+        await connection.rollback();
+        connection.release();
         return res.status(400).json({ error: 'Keine eigene Anfrage zum Zurückziehen vorhanden.' });
       }
 
-      await pool.query(
+      await connection.query(
         'UPDATE expense_splits SET pending_confirmation = 0, confirmation_initiated_by = NULL WHERE id = ?',
         [splitId]
       );
     }
     else if (action === 'reopen') {
       if (!split.is_paid) {
+        await connection.rollback();
+        connection.release();
         return res.status(400).json({ error: 'Transaktion ist nicht als bezahlt markiert.' });
       }
 
-      await pool.query(
+      await connection.query(
         'UPDATE expense_splits SET is_paid = 0, pending_confirmation = 0, confirmation_initiated_by = NULL, confirmed_at = NULL WHERE id = ?',
         [splitId]
       );
     }
     else {
+      await connection.rollback();
+      connection.release();
       return res.status(400).json({ error: 'Ungültige Aktion.' });
     }
 
+    await connection.commit();
+    connection.release();
     res.json({ message: 'Settlement erfolgreich aktualisiert.' });
   } catch (err) {
+    await connection.rollback();
+    connection.release();
     console.error('Fehler beim Settlement:', err);
     res.status(500).json({ error: 'Serverfehler beim Aktualisieren des Status.' });
   }
@@ -669,18 +713,22 @@ app.delete('/api/transactions/:id', authenticateToken, async (req, res) => {
     const splitId = req.params.id;
     const currentUserId = req.userId;
 
-    const [splits] = await pool.query('SELECT * FROM expense_splits WHERE id = ?', [splitId]);
+    const [splits] = await pool.query('SELECT * FROM expense_splits WHERE id = ? AND deleted_at IS NULL', [splitId]);
     if (splits.length === 0) {
       return res.status(404).json({ error: 'Transaktion nicht gefunden.' });
     }
 
     const split = splits[0];
-    if (split.creditor_id !== currentUserId && split.debtor_id !== currentUserId) {
-      return res.status(403).json({ error: 'Keine Berechtigung zum Löschen.' });
+    if (split.creditor_id !== currentUserId) {
+      return res.status(403).json({ error: 'Nur der Gläubiger kann eine offene Forderung stornieren.' });
     }
 
-    await pool.query('DELETE FROM expense_splits WHERE id = ?', [splitId]);
-    res.json({ message: 'Transaktion erfolgreich gelöscht.' });
+    if (split.is_paid || split.pending_confirmation) {
+      return res.status(403).json({ error: 'Bereits beglichene oder in Bearbeitung befindliche Transaktionen können nicht gelöscht werden.' });
+    }
+
+    await pool.query('UPDATE expense_splits SET deleted_at = NOW() WHERE id = ?', [splitId]);
+    res.json({ message: 'Transaktion erfolgreich storniert.' });
   } catch (err) {
     console.error('Fehler beim Löschen:', err);
     res.status(500).json({ error: 'Serverfehler beim Löschen.' });
@@ -697,9 +745,9 @@ app.get('/api/friends', authenticateToken, async (req, res) => {
     // offene Schuld/Forderung nur weil die Gegenseite ihr Konto gelöscht hat.
     const [users] = await pool.query('SELECT id, username FROM users WHERE id != ?', [currentUserId]);
     const [splits] = await pool.query(`
-      SELECT creditor_id, debtor_id, amount, is_paid 
-      FROM expense_splits 
-      WHERE creditor_id = ? OR debtor_id = ?
+      SELECT creditor_id, debtor_id, amount, is_paid
+      FROM expense_splits
+      WHERE (creditor_id = ? OR debtor_id = ?) AND deleted_at IS NULL
     `, [currentUserId, currentUserId]);
 
     const friendsList = users.map(user => {
@@ -735,13 +783,13 @@ app.get('/api/friends/statistics', authenticateToken, async (req, res) => {
     const currentUserId = req.userId;
 
     const [splits] = await pool.query(`
-      SELECT creditor_id, debtor_id, amount, is_paid 
-      FROM expense_splits 
-      WHERE creditor_id = ? OR debtor_id = ?
+      SELECT creditor_id, debtor_id, amount, is_paid
+      FROM expense_splits
+      WHERE (creditor_id = ? OR debtor_id = ?) AND deleted_at IS NULL
     `, [currentUserId, currentUserId]);
 
-    let totalSpent = 0;    
-    let totalReceived = 0;  
+    let totalSpent = 0;
+    let totalReceived = 0;
     const activeFriendsSet = new Set();
 
     splits.forEach(split => {

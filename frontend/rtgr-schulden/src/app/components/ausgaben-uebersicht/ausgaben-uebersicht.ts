@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Bubble } from '../bubble/bubble';
 import { CurrencyPipe } from '@angular/common';
 import { TransactionService, Transaction } from '../../services/transaction.service';
@@ -24,6 +25,7 @@ export class AusgabenUebersichtComponent implements OnInit {
 
   private cdr = inject(ChangeDetectorRef);
   private prefs = inject(UserPreferencesService);
+  private destroyRef = inject(DestroyRef);
 
   // Nicht mehr hartcodiert: kommt jetzt live über den TransactionService,
   // damit neu gesplittete Rechnungen sofort in der Liste erscheinen.
@@ -39,7 +41,7 @@ export class AusgabenUebersichtComponent implements OnInit {
 
   ngOnInit(): void {
     // Auf zentralen State abonnieren...
-    this.transactionService.transactions$.subscribe(data => {
+    this.transactionService.transactions$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(data => {
       this.transactions = data;
       // Ohne diesen Aufruf wird die View erst beim nächsten "zufälligen"
       // Change-Detection-Trigger aktualisiert, da die App zoneless läuft
@@ -50,7 +52,7 @@ export class AusgabenUebersichtComponent implements OnInit {
     // ...und initial vom Backend laden.
     this.transactionService.loadTransactions();
 
-    this.prefs.currency$.subscribe(currency => {
+    this.prefs.currency$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(currency => {
       this.currency = currency;
       this.cdr.detectChanges();
     });
@@ -140,9 +142,10 @@ export class AusgabenUebersichtComponent implements OnInit {
       confirmationInitiatedByMe: item.confirmationInitiatedByMe
     };
 
-    Object.assign(item, optimisticChanges);
+    // pendingActionIds zuerst setzen, damit die durch updateTransactionState
+    // ausgelöste BehaviorSubject-Emission beides in einem detectChanges erfasst.
     this.pendingActionIds.add(item.id);
-    this.cdr.detectChanges();
+    this.transactionService.updateTransactionState(item.id, optimisticChanges);
 
     const call$ =
       action === 'request' ? this.transactionService.requestSettlement(item.id) :
@@ -153,12 +156,12 @@ export class AusgabenUebersichtComponent implements OnInit {
     call$.subscribe({
       next: () => {
         this.pendingActionIds.delete(item.id);
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error(`Fehler bei Aktion "${action}":`, err);
-        Object.assign(item, previousState); // Rollback
         this.pendingActionIds.delete(item.id);
-        this.cdr.detectChanges();
+        this.transactionService.updateTransactionState(item.id, previousState);
       }
     });
   }

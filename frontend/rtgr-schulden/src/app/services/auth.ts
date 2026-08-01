@@ -86,7 +86,14 @@ export class AuthService {
 
   getCurrentUser(): { id: number; username: string } | null {
     const user = localStorage.getItem('user') ?? sessionStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
+    if (!user) return null;
+    try {
+      return JSON.parse(user);
+    } catch {
+      localStorage.removeItem('user');
+      sessionStorage.removeItem('user');
+      return null;
+    }
   }
 
   private setSession(token: string, user: unknown, persist: boolean): void {

@@ -1,4 +1,5 @@
-import { Component, EventEmitter, Output, OnInit, OnDestroy, AfterViewInit, ElementRef, HostListener, inject, ChangeDetectorRef, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit, OnDestroy, AfterViewInit, ElementRef, HostListener, inject, ChangeDetectorRef, ViewChild, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TransactionService, SplitBillPayload } from '../../services/transaction.service';
@@ -34,6 +35,7 @@ export class AddBillComponent implements OnInit, AfterViewInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private prefs = inject(UserPreferencesService);
   private hostElement = inject<ElementRef<HTMLElement>>(ElementRef);
+  private destroyRef = inject(DestroyRef);
 
   /** Element, das vor dem Öffnen fokussiert war (i.d.R. der "+"-Button) - bekommt beim Schließen den Fokus zurück. */
   private previouslyFocusedElement: HTMLElement | null = null;
@@ -68,7 +70,7 @@ export class AddBillComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadRegisteredFriends();
     this.loadLastConfig();
 
-    this.prefs.currency$.subscribe(currency => {
+    this.prefs.currency$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(currency => {
       this.currency = currency;
       this.cdr.detectChanges();
     });

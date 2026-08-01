@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Bubble } from '../bubble/bubble';
 import { FriendService, FriendItem, FriendStatistics } from '../../services/friend.service';
 import { TransactionService, Transaction } from '../../services/transaction.service';
@@ -34,6 +35,7 @@ export class FriendsComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private friendService = inject(FriendService);
   private transactionService = inject(TransactionService);
+  private destroyRef = inject(DestroyRef);
 
   private readonly ringRadius = 42;
 
@@ -43,13 +45,13 @@ export class FriendsComponent implements OnInit {
 
   ngOnInit(): void {
     // Auf Freunde-Daten abonnieren
-    this.friendService.friends$.subscribe(data => {
+    this.friendService.friends$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(data => {
       this.friendsList = data;
       this.cdr.detectChanges();
     });
 
     // Auf Statistiken abonnieren
-    this.friendService.stats$.subscribe(data => {
+    this.friendService.stats$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(data => {
       this.friendStats = data;
       this.cdr.detectChanges();
     });
@@ -58,7 +60,7 @@ export class FriendsComponent implements OnInit {
     // Statistiken (Beglichen-Quote, Rangliste, Top-Anlässe, Highlights) -
     // derselbe geteilte Stream, den auch die Schulden-Übersicht nutzt, kein
     // eigener Backend-Endpunkt nötig.
-    this.transactionService.transactions$.subscribe(data => {
+    this.transactionService.transactions$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(data => {
       this.transactions = data;
       this.cdr.detectChanges();
     });

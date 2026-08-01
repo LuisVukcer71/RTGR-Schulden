@@ -72,6 +72,13 @@ export class TransactionService {
     this.transactionsSubject.next([]);
   }
 
+  updateTransactionState(id: string, changes: Partial<Transaction>): void {
+    const updated = this.transactionsSubject.getValue().map(t =>
+      t.id === id ? { ...t, ...changes } : t
+    );
+    this.transactionsSubject.next(updated);
+  }
+
   /**
    * Rechnung aufteilen. Lädt nach erfolgreichem Split automatisch
    * die Transaktionsliste neu, damit die UI sofort konsistent ist.
