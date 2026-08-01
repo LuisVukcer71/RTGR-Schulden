@@ -350,3 +350,26 @@
   0%, 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.45); }
   50% { box-shadow: 0 0 0 7px rgba(56, 189, 248, 0); }
 }
+
+/* ==========================================
+   5. SETTLE-BUTTON: LADE-ZUSTAND
+   Ersetzt das Checkmark-Icon durch den Spinner während eine Server-Anfrage
+   läuft. .is-loading blockiert via [disabled] bereits Doppelklicks;
+   visuell signalisiert der Spinner die laufende Aktion.
+   ========================================== */
+.settle-btn.is-loading {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  cursor: default;
+}
+
+/* ==========================================
+   6. SKELETON-LISTE: eigener Wrapper damit Angular-Animations-Trigger
+   den Skeleton nicht mitanimiert (verschiedene @if-Branches).
+   ========================================== */
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* shimmer @keyframes kommt aus styles.css */

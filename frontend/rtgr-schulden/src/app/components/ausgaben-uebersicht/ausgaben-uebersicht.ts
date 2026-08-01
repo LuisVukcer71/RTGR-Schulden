@@ -1,19 +1,51 @@
 import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {
+  trigger, transition, style, animate, query, stagger
+} from '@angular/animations';
 import { Bubble } from '../bubble/bubble';
 import { CurrencyPipe } from '@angular/common';
 import { TransactionService, Transaction } from '../../services/transaction.service';
 import { CountUpDirective } from '../../directives/count-up.directive';
 import { CategoryIconComponent } from '../category-icon/category-icon';
 import { UserPreferencesService } from '../../services/user-preferences.service';
+import { SpinnerComponent } from '../spinner/spinner';
 
 type SettlementAction = 'request' | 'confirm' | 'cancel' | 'reopen';
 
 @Component({
   selector: 'app-ausgaben-uebersicht',
-  imports: [Bubble, CurrencyPipe, CountUpDirective, CategoryIconComponent],
+  imports: [Bubble, CurrencyPipe, CountUpDirective, CategoryIconComponent, SpinnerComponent],
   templateUrl: './ausgaben-uebersicht.html',
-  styleUrls: ['./ausgaben-uebersicht.css']
+  styleUrls: ['./ausgaben-uebersicht.css'],
+  animations: [
+    /**
+     * Staggered-Entrance für die Transaktionsliste:
+     * - Beim Tab-/Filter-Wechsel (Zustandswechsel des Bindings) treten
+     *   neue Items mit Stagger ein; verlassende faden schnell aus.
+     * - Der erste Parameter des Bindings ist der Tab, der zweite der Filter,
+     *   damit Angular jeden Tab-/Filterwechsel als eigenen Übergang erkennt.
+     */
+    trigger('listAnim', [
+      transition('* <=> *', [
+        query(':enter', [
+          style({ opacity: 0, transform: 'translateY(10px)' }),
+          stagger(28, [
+            animate(
+              '250ms cubic-bezier(0.32, 0.72, 0, 1)',
+              style({ opacity: 1, transform: 'translateY(0)' })
+            )
+          ])
+        ], { optional: true }),
+        query(':leave', [
+          animate(
+            '150ms ease-in',
+            style({ opacity: 0, transform: 'translateX(-6px)' })
+          )
+        ], { optional: true })
+      ])
+    ])
+  ]
 })
 export class AusgabenUebersichtComponent implements OnInit {
   activeTab: 'all' | 'owedToMe' | 'iOwe' = 'all';
@@ -23,33 +55,37 @@ export class AusgabenUebersichtComponent implements OnInit {
     return this.activeTab === 'all' ? 0 : this.activeTab === 'owedToMe' ? 1 : 2;
   }
 
+  /** Bindungs-State für [@listAnim]: ändert sich bei jedem Tab-/Filterwechsel. */
+  get listAnimState(): string {
+    return `${this.activeTab}:${this.statusFilter}`;
+  }
+
   private cdr = inject(ChangeDetectorRef);
   private prefs = inject(UserPreferencesService);
   private destroyRef = inject(DestroyRef);
 
-  // Nicht mehr hartcodiert: kommt jetzt live über den TransactionService,
-  // damit neu gesplittete Rechnungen sofort in der Liste erscheinen.
   transactions: Transaction[] = [];
+  isLoading = false;
 
   /** Anzeige-Währung aus den Nutzer-Einstellungen statt hartkodiertem EUR. */
   currency = this.prefs.currency;
 
-  /** Verhindert Doppel-Klicks auf denselben Settle-Button, während dessen eigene Anfrage noch läuft. */
+  /** Verhindert Doppel-Klicks auf denselben Settle-Button. */
   private pendingActionIds = new Set<string>();
 
   constructor(private transactionService: TransactionService) {}
 
   ngOnInit(): void {
-    // Auf zentralen State abonnieren...
-    this.transactionService.transactions$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(data => {
-      this.transactions = data;
-      // Ohne diesen Aufruf wird die View erst beim nächsten "zufälligen"
-      // Change-Detection-Trigger aktualisiert, da die App zoneless läuft
-      // und async Subscriptions nicht automatisch eine Neu-Prüfung der
-      // View auslösen.
+    this.transactionService.isLoading$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(loading => {
+      this.isLoading = loading;
       this.cdr.detectChanges();
     });
-    // ...und initial vom Backend laden.
+
+    this.transactionService.transactions$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(data => {
+      this.transactions = data;
+      this.cdr.detectChanges();
+    });
+
     this.transactionService.loadTransactions();
 
     this.prefs.currency$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(currency => {
@@ -69,68 +105,40 @@ export class AusgabenUebersichtComponent implements OnInit {
         this.statusFilter === 'all' ? true :
         this.statusFilter === 'open' ? !item.isPaid :
         item.isPaid;
-
       return matchesType && matchesStatus;
     });
   }
 
-  /**
-   * Zentrale Klick-Logik für den Settle-Button. Leitet je nach
-   * aktuellem Zustand der Transaktion die richtige Aktion ein:
-   *
-   *   bezahlt            -> reopen  (wieder öffnen)
-   *   wartet auf Partner  -> cancel  (ich habe angefragt -> zurückziehen)
-   *   Partner wartet auf mich -> confirm (ich bestätige)
-   *   offen               -> request (Bestätigung anfragen)
-   */
   handleSettleClick(item: Transaction, event: Event): void {
     event.stopPropagation();
 
-    // Ohne diese Sperre könnte ein schnelles Mehrfach-Klicken mehrere,
-    // sich überlappende Settlement-Requests für dieselbe Karte auslösen -
-    // der optimistische Rollback geht aber von genau einer laufenden
-    // Aktion aus und würde bei Overlap den falschen Vorzustand wiederherstellen.
     if (this.pendingActionIds.has(item.id)) return;
 
     if (item.isPaid) {
       this.performAction(item, 'reopen', {
-        isPaid: false,
-        pendingConfirmation: false,
-        confirmationInitiatedByMe: false
+        isPaid: false, pendingConfirmation: false, confirmationInitiatedByMe: false
       });
       return;
     }
 
     if (item.pendingConfirmation) {
       if (item.confirmationInitiatedByMe) {
-        // Eigene Anfrage zurückziehen.
         this.performAction(item, 'cancel', {
-          pendingConfirmation: false,
-          confirmationInitiatedByMe: false
+          pendingConfirmation: false, confirmationInitiatedByMe: false
         });
       } else {
-        // Anfrage der Gegenseite bestätigen -> jetzt wirklich abgehakt.
         this.performAction(item, 'confirm', {
-          isPaid: true,
-          pendingConfirmation: false,
-          confirmationInitiatedByMe: false
+          isPaid: true, pendingConfirmation: false, confirmationInitiatedByMe: false
         });
       }
       return;
     }
 
-    // Normalfall: Bestätigung anfragen.
     this.performAction(item, 'request', {
-      pendingConfirmation: true,
-      confirmationInitiatedByMe: true
+      pendingConfirmation: true, confirmationInitiatedByMe: true
     });
   }
 
-  /**
-   * Führt eine Settlement-Aktion optimistisch aus (UI reagiert sofort)
-   * und rollt bei einem Server-Fehler den vorherigen Zustand zurück,
-   * damit UI und Backend nicht auseinanderlaufen.
-   */
   private performAction(
     item: Transaction,
     action: SettlementAction,
@@ -142,15 +150,13 @@ export class AusgabenUebersichtComponent implements OnInit {
       confirmationInitiatedByMe: item.confirmationInitiatedByMe
     };
 
-    // pendingActionIds zuerst setzen, damit die durch updateTransactionState
-    // ausgelöste BehaviorSubject-Emission beides in einem detectChanges erfasst.
     this.pendingActionIds.add(item.id);
     this.transactionService.updateTransactionState(item.id, optimisticChanges);
 
     const call$ =
       action === 'request' ? this.transactionService.requestSettlement(item.id) :
       action === 'confirm' ? this.transactionService.confirmSettlement(item.id) :
-      action === 'cancel' ? this.transactionService.cancelSettlementRequest(item.id) :
+      action === 'cancel'  ? this.transactionService.cancelSettlementRequest(item.id) :
       this.transactionService.reopenTransaction(item.id);
 
     call$.subscribe({

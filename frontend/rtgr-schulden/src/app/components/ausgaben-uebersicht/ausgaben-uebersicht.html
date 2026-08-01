@@ -1,8 +1,6 @@
 <div class="app-viewport">
 
-  <!-- HERO SALDO: schrumpft/verblasst kontinuierlich mit der Scroll-Position
-       (an die Scroll-Distanz gekoppelte CSS-Animation, siehe ausgaben-uebersicht.css) -
-       keine Klassen-Bindung im Template nötig, läuft rein über CSS. -->
+  <!-- HERO SALDO: schrumpft/verblasst kontinuierlich mit der Scroll-Position -->
   <header class="saldo-hero">
     <span class="saldo-caption">OFFENER SALDO</span>
     <h1 class="saldo-display"
@@ -12,14 +10,10 @@
         countUpPrefixPositive="+"></h1>
   </header>
 
-  <!-- STICKY HEADER GROUP (Beinhaltet Tabs + Filter) -->
+  <!-- STICKY HEADER GROUP -->
   <div class="scroll-header-group">
 
-    <!-- KOMPAKTER SALDO: blendet genau dann ein, wenn der große Saldo oben
-         verschwindet - der Wert bleibt beim Scrollen durchgehend sichtbar,
-         wandert nur von "groß, oben" zu "klein, in der Leiste" (iOS-typisches
-         Large-Title-Collapse). Rein visuelles Echo derselben Zahl, daher
-         aria-hidden - Screenreader hätten sonst den Saldo doppelt gehört. -->
+    <!-- Kompakter Saldo im Sticky-Header -->
     <div class="compact-saldo" aria-hidden="true">
       <span class="compact-saldo-label">Saldo</span>
       <span class="compact-saldo-value"
@@ -36,37 +30,35 @@
         <app-bubble width="100%">
           <div class="segmented-control segments-three" [style.--active-segment-index]="activeSegmentIndex">
             <div class="segment-active-indicator" aria-hidden="true"></div>
-            <button
-              type="button"
-              class="segment-btn"
-              [class.active]="activeTab === 'all'"
-              [attr.aria-pressed]="activeTab === 'all'"
-              (click)="activeTab = 'all'">
-              <svg class="segment-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+
+            <button type="button" class="segment-btn"
+                    [class.active]="activeTab === 'all'"
+                    [attr.aria-pressed]="activeTab === 'all'"
+                    (click)="activeTab = 'all'">
+              <svg class="segment-icon" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.2">
                 <path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/>
               </svg>
               <span>Alle</span>
             </button>
 
-            <button
-              type="button"
-              class="segment-btn"
-              [class.active]="activeTab === 'owedToMe'"
-              [attr.aria-pressed]="activeTab === 'owedToMe'"
-              (click)="activeTab = 'owedToMe'">
-              <svg class="segment-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <button type="button" class="segment-btn"
+                    [class.active]="activeTab === 'owedToMe'"
+                    [attr.aria-pressed]="activeTab === 'owedToMe'"
+                    (click)="activeTab = 'owedToMe'">
+              <svg class="segment-icon" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.2">
                 <path d="M19 5L5 19M5 19H15M5 19V9" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
               <span>Erhalten</span>
             </button>
 
-            <button
-              type="button"
-              class="segment-btn"
-              [class.active]="activeTab === 'iOwe'"
-              [attr.aria-pressed]="activeTab === 'iOwe'"
-              (click)="activeTab = 'iOwe'">
-              <svg class="segment-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <button type="button" class="segment-btn"
+                    [class.active]="activeTab === 'iOwe'"
+                    [attr.aria-pressed]="activeTab === 'iOwe'"
+                    (click)="activeTab = 'iOwe'">
+              <svg class="segment-icon" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.2">
                 <path d="M5 19L19 5M19 5H9M19 5V15" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
               <span>Schulden</span>
@@ -75,30 +67,24 @@
         </app-bubble>
       </nav>
 
-      <!-- SUB-FILTER CHIPS -->
+      <!-- STATUS-FILTER CHIPS -->
       <div class="status-filter-bar">
-        <button
-          type="button"
-          class="filter-pill"
-          [class.active]="statusFilter === 'all'"
-          [attr.aria-pressed]="statusFilter === 'all'"
-          (click)="statusFilter = 'all'">
+        <button type="button" class="filter-pill"
+                [class.active]="statusFilter === 'all'"
+                [attr.aria-pressed]="statusFilter === 'all'"
+                (click)="statusFilter = 'all'">
           Alle
         </button>
-        <button
-          type="button"
-          class="filter-pill"
-          [class.active]="statusFilter === 'open'"
-          [attr.aria-pressed]="statusFilter === 'open'"
-          (click)="statusFilter = 'open'">
+        <button type="button" class="filter-pill"
+                [class.active]="statusFilter === 'open'"
+                [attr.aria-pressed]="statusFilter === 'open'"
+                (click)="statusFilter = 'open'">
           Offen
         </button>
-        <button
-          type="button"
-          class="filter-pill"
-          [class.active]="statusFilter === 'paid'"
-          [attr.aria-pressed]="statusFilter === 'paid'"
-          (click)="statusFilter = 'paid'">
+        <button type="button" class="filter-pill"
+                [class.active]="statusFilter === 'paid'"
+                [attr.aria-pressed]="statusFilter === 'paid'"
+                (click)="statusFilter = 'paid'">
           Erledigt
         </button>
       </div>
@@ -108,74 +94,100 @@
 
   <!-- TRANSAKTIONSLISTE -->
   <main class="transactions-section">
-    <div class="list-fade-wrapper">
-      @for (item of currentList; track item.id) {
-        <div class="transaction-card" [class.is-paid-card]="item.isPaid">
-          <app-bubble width="100%">
-            <div class="card-inner">
 
-              <!-- Info Block -->
-              <div class="card-info-wrapper">
-                @if (item.category) {
-                  <div class="category-badge">
-                    <app-category-icon [categoryId]="item.category"></app-category-icon>
+    <!-- SKELETON: nur beim initialen Laden (noch keine Daten im State) -->
+    @if (isLoading && transactions.length === 0) {
+      <div class="list-fade-wrapper skeleton-list">
+        @for (_ of [1, 2, 3, 4]; track $index) {
+          <div class="skeleton-card" [style.animation-delay]="$index * 55 + 'ms'">
+            <div class="skeleton-avatar skeleton-pulse"></div>
+            <div class="skeleton-lines">
+              <div class="skeleton-line w-60 skeleton-pulse"></div>
+              <div class="skeleton-line w-40 skeleton-pulse"></div>
+            </div>
+            <div class="skeleton-amount skeleton-pulse"></div>
+          </div>
+        }
+      </div>
+
+    } @else {
+
+      <!-- ECHTE LISTE mit Stagger-Entrance-Animation pro Tab-/Filterwechsel -->
+      <div class="list-fade-wrapper" [@listAnim]="listAnimState">
+
+        @for (item of currentList; track item.id) {
+          <div class="transaction-card" [class.is-paid-card]="item.isPaid">
+            <app-bubble width="100%">
+              <div class="card-inner">
+
+                <!-- Info Block -->
+                <div class="card-info-wrapper">
+                  @if (item.category) {
+                    <div class="category-badge">
+                      <app-category-icon [categoryId]="item.category"></app-category-icon>
+                    </div>
+                  }
+                  <div class="card-info">
+                    <div class="title-row">
+                      <span class="card-title">{{ item.person }}</span>
+                      @if (item.isPaid) {
+                        <span class="paid-badge">Bezahlt</span>
+                      } @else if (item.pendingConfirmation) {
+                        <span class="paid-badge pending-badge"
+                              [class.pending-badge-mine]="item.confirmationInitiatedByMe">
+                          {{ item.confirmationInitiatedByMe ? 'Wartet auf Bestätigung' : 'Bitte bestätigen' }}
+                        </span>
+                      }
+                    </div>
+                    <span class="card-subtitle">{{ item.reason }} • {{ item.date }}</span>
                   </div>
-                }
-                <div class="card-info">
-                  <div class="title-row">
-                    <span class="card-title">{{ item.person }}</span>
-                    @if (item.isPaid) {
-                      <span class="paid-badge">Bezahlt</span>
-                    } @else if (item.pendingConfirmation) {
-                      <span class="paid-badge pending-badge" [class.pending-badge-mine]="item.confirmationInitiatedByMe">
-                        {{ item.confirmationInitiatedByMe ? 'Wartet auf Bestätigung' : 'Bitte bestätigen' }}
-                      </span>
-                    }
-                  </div>
-                  <span class="card-subtitle">{{ item.reason }} • {{ item.date }}</span>
                 </div>
+
+                <!-- Betrag + Action Button -->
+                <div class="card-right-group">
+                  <span class="card-amount"
+                        [class.is-positive]="item.type === 'owedToMe' && !item.isPaid"
+                        [class.is-negative]="item.type === 'iOwe' && !item.isPaid"
+                        [class.is-settled]="item.isPaid">
+                    {{ item.type === 'owedToMe' ? '+' : '-' }}{{ item.amount | currency:currency:'symbol':'1.2-2' }}
+                  </span>
+
+                  <button type="button" class="settle-btn"
+                          [class.checked]="item.isPaid"
+                          [class.pending-mine]="item.pendingConfirmation && item.confirmationInitiatedByMe"
+                          [class.pending-theirs]="item.pendingConfirmation && !item.confirmationInitiatedByMe"
+                          [class.is-loading]="isActionPending(item.id)"
+                          [disabled]="isActionPending(item.id)"
+                          (click)="handleSettleClick(item, $event)"
+                          [title]="item.isPaid
+                            ? 'Als offen markieren'
+                            : item.pendingConfirmation
+                              ? (item.confirmationInitiatedByMe ? 'Warte auf Bestätigung – klicken zum Zurückziehen' : 'Zum Bestätigen klicken')
+                              : 'Als bezahlt markieren (Gegenseite muss bestätigen)'">
+                    @if (isActionPending(item.id)) {
+                      <app-spinner [size]="16"></app-spinner>
+                    } @else {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    }
+                  </button>
+                </div>
+
               </div>
-
-              <!-- Betrag + Action Button -->
-              <div class="card-right-group">
-                <span class="card-amount" 
-                      [class.is-positive]="item.type === 'owedToMe' && !item.isPaid" 
-                      [class.is-negative]="item.type === 'iOwe' && !item.isPaid"
-                      [class.is-settled]="item.isPaid">
-                  {{ item.type === 'owedToMe' ? '+' : '-' }}{{ item.amount | currency:currency:'symbol':'1.2-2' }}
-                </span>
-
-                <!-- Quick Action Button: steuert den kompletten Bestätigungs-Workflow -->
-                <button
-                  type="button"
-                  class="settle-btn"
-                  [class.checked]="item.isPaid"
-                  [class.pending-mine]="item.pendingConfirmation && item.confirmationInitiatedByMe"
-                  [class.pending-theirs]="item.pendingConfirmation && !item.confirmationInitiatedByMe"
-                  [disabled]="isActionPending(item.id)"
-                  (click)="handleSettleClick(item, $event)"
-                  [title]="item.isPaid
-                    ? 'Als offen markieren'
-                    : item.pendingConfirmation
-                      ? (item.confirmationInitiatedByMe ? 'Warte auf Bestätigung – klicken zum Zurückziehen' : 'Zum Bestätigen klicken')
-                      : 'Als bezahlt markieren (Gegenseite muss bestätigen)'">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                </button>
-              </div>
-
+            </app-bubble>
+          </div>
+        } @empty {
+          <app-bubble width="100%">
+            <div class="empty-state">
+              Keine Transaktionen gefunden
             </div>
           </app-bubble>
-        </div>
-      } @empty {
-        <app-bubble width="100%">
-          <div class="empty-state">
-            Keine Transaktionen gefunden
-          </div>
-        </app-bubble>
-      }
-    </div>
+        }
+
+      </div>
+    }
+
   </main>
 
 </div>

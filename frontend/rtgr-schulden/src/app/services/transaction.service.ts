@@ -47,6 +47,9 @@ export class TransactionService {
   private transactionsSubject = new BehaviorSubject<Transaction[]>([]);
   readonly transactions$ = this.transactionsSubject.asObservable();
 
+  private loadingSubject = new BehaviorSubject<boolean>(false);
+  readonly isLoading$ = this.loadingSubject.asObservable();
+
   constructor(private http: HttpClient) {}
 
   /**
@@ -54,9 +57,18 @@ export class TransactionService {
    * pusht sie an alle Abonnenten von transactions$.
    */
   loadTransactions(): void {
+    if (this.transactionsSubject.getValue().length === 0) {
+      this.loadingSubject.next(true);
+    }
     this.http.get<Transaction[]>(`${this.apiUrl}/transactions`).subscribe({
-      next: (data) => this.transactionsSubject.next(data),
-      error: (err) => console.error('Fehler beim Laden der Transaktionen:', err)
+      next: (data) => {
+        this.transactionsSubject.next(data);
+        this.loadingSubject.next(false);
+      },
+      error: (err) => {
+        console.error('Fehler beim Laden der Transaktionen:', err);
+        this.loadingSubject.next(false);
+      }
     });
   }
 
@@ -70,6 +82,7 @@ export class TransactionService {
    */
   resetState(): void {
     this.transactionsSubject.next([]);
+    this.loadingSubject.next(false);
   }
 
   updateTransactionState(id: string, changes: Partial<Transaction>): void {

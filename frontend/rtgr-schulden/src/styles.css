@@ -48,6 +48,13 @@ body.modal-open {
   --dur-quick: 180ms;   /* Unmittelbares Feedback: Press-States, Toggles */
   --dur-normal: 300ms;  /* Standard-Übergänge: Ein-/Ausblenden, Listen */
   --dur-slow: 420ms;    /* Sheets, Seitenübergänge */
+
+  /* Zusätzliche Easing-Kurven für spezifische Einsatzzwecke. */
+  --ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+  --ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
+  /* Überschwingende Kurve nur für dekorative Micro-Interactions (Konfetti,
+     Avatar-Bounce). Nie für strukturelle UI-Elemente. */
+  --ease-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 /* Reduced-Motion: System-Einstellung respektieren statt Animationen aufzudrängen. */
@@ -156,4 +163,58 @@ html[data-nav-direction="backward"]::view-transition-new(root) {
 
 button, a, input, select, textarea {
   -webkit-tap-highlight-color: transparent;
+}
+
+/* ==========================================
+   SCROLL-REVEAL – Intersection-Observer-gesteuerte Einblend-Animation.
+   .reveal-item wird per RevealDirective gesetzt (Startzustand: unsichtbar).
+   .reveal-item--visible wird per IO-Callback gesetzt und spielt die Animation.
+   --reveal-delay wird per Direktive als Inline-Custom-Property gesetzt,
+   um Stagger-Versätze ohne DOM-Kopien zu ermöglichen.
+   ========================================== */
+.reveal-item {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.reveal-item--visible {
+  animation: revealIn var(--dur-normal) var(--ease-emphasized) var(--reveal-delay, 0ms) both;
+}
+
+@keyframes revealIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================
+   SKELETON-SHIMMER – Lade-Platzhalter.
+   background-size: 200% ermöglicht den sweep-Effekt über eine reine
+   linear-gradient ohne externe Assets.
+   ========================================== */
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+/* ==========================================
+   KONFETTI – Burst-Animation für den "Alles ausgeglichen"-Moment.
+   ========================================== */
+@keyframes confettiFly {
+  0%   { opacity: 1; transform: translate(-50%, -50%) scale(0) rotate(0deg); }
+  60%  { opacity: 1; }
+  100% {
+    opacity: 0;
+    transform:
+      translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px)))
+      scale(1) rotate(180deg);
+  }
+}
+
+/* ==========================================
+   AVATAR-BOUNCE – einmaliger Bounce beim ersten Einblenden.
+   ========================================== */
+@keyframes avatarBounce {
+  0%   { transform: scale(0.4); opacity: 0; }
+  70%  { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
 }

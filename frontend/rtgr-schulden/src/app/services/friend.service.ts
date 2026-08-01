@@ -30,6 +30,9 @@ export class FriendService {
   private statsSubject = new BehaviorSubject<FriendStatistics | null>(null);
   stats$ = this.statsSubject.asObservable();
 
+  private loadingSubject = new BehaviorSubject<boolean>(false);
+  readonly isLoading$ = this.loadingSubject.asObservable();
+
   /**
    * Setzt den zwischengespeicherten State zurück. Ohne das würde beim
    * Account-Wechsel im selben Browser-Tab (Logout -> anderer Login) kurz
@@ -40,12 +43,22 @@ export class FriendService {
   resetState(): void {
     this.friendsSubject.next([]);
     this.statsSubject.next(null);
+    this.loadingSubject.next(false);
   }
 
   loadFriends(): void {
+    if (this.friendsSubject.getValue().length === 0) {
+      this.loadingSubject.next(true);
+    }
     this.http.get<FriendItem[]>(this.apiUrl).subscribe({
-      next: (data) => this.friendsSubject.next(data),
-      error: (err) => console.error('Fehler beim Laden der Freunde:', err)
+      next: (data) => {
+        this.friendsSubject.next(data);
+        this.loadingSubject.next(false);
+      },
+      error: (err) => {
+        console.error('Fehler beim Laden der Freunde:', err);
+        this.loadingSubject.next(false);
+      }
     });
   }
 

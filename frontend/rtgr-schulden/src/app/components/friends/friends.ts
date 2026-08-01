@@ -4,6 +4,9 @@ import { Bubble } from '../bubble/bubble';
 import { FriendService, FriendItem, FriendStatistics } from '../../services/friend.service';
 import { TransactionService, Transaction } from '../../services/transaction.service';
 import { CountUpDirective } from '../../directives/count-up.directive';
+import { RevealDirective } from '../../directives/reveal.directive';
+import { TiltDirective } from '../../directives/tilt.directive';
+import { SpinnerComponent } from '../spinner/spinner';
 
 /** Toleranz für Geldbeträge: Rundungsreste (z.B. 0.004) gelten als ausgeglichen. */
 const BALANCE_EPSILON = 0.005;
@@ -19,9 +22,20 @@ interface PartnerStat {
   count: number;
 }
 
+const AVATAR_GRADIENTS = [
+  'linear-gradient(135deg, #0ea5e9, #2563eb)',
+  'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+  'linear-gradient(135deg, #10b981, #059669)',
+  'linear-gradient(135deg, #f59e0b, #d97706)',
+  'linear-gradient(135deg, #f43f5e, #be123c)',
+  'linear-gradient(135deg, #06b6d4, #0891b2)',
+  'linear-gradient(135deg, #ec4899, #be185d)',
+  'linear-gradient(135deg, #6366f1, #4338ca)',
+];
+
 @Component({
   selector: 'app-friends',
-  imports: [Bubble, CountUpDirective],
+  imports: [Bubble, CountUpDirective, RevealDirective, TiltDirective, SpinnerComponent],
   templateUrl: './friends.html',
   styleUrls: ['./friends.css']
 })
@@ -42,48 +56,76 @@ export class FriendsComponent implements OnInit {
   friendsList: FriendItem[] = [];
   friendStats: FriendStatistics | null = null;
   transactions: Transaction[] = [];
+  isLoading = false;
+
+  /** Konfetti-Stücke für die "Alles ausgeglichen"-Animation. */
+  readonly confettiIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+
+  /**
+   * Steuert, ob Ring-Offset und Balken-Breiten auf ihren echten Wert gesetzt
+   * sind. Wird bei jedem Wechsel auf den Stats-Tab kurz auf false gesetzt,
+   * damit die CSS-Transition den Weg von 0 zum Zielwert animiert.
+   */
+  private statsReady = false;
 
   ngOnInit(): void {
-    // Auf Freunde-Daten abonnieren
+    this.friendService.isLoading$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(loading => {
+      this.isLoading = loading;
+      this.cdr.detectChanges();
+    });
+
     this.friendService.friends$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(data => {
       this.friendsList = data;
       this.cdr.detectChanges();
     });
 
-    // Auf Statistiken abonnieren
     this.friendService.stats$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(data => {
       this.friendStats = data;
       this.cdr.detectChanges();
     });
 
-    // Rohe Transaktionsliste für die client-seitig berechneten Zusatz-
-    // Statistiken (Beglichen-Quote, Rangliste, Top-Anlässe, Highlights) -
-    // derselbe geteilte Stream, den auch die Schulden-Übersicht nutzt, kein
-    // eigener Backend-Endpunkt nötig.
     this.transactionService.transactions$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(data => {
       this.transactions = data;
       this.cdr.detectChanges();
     });
 
-    // Daten vom Backend anfordern (idempotent, falls schon geladen einfach
-    // ein Refresh - wichtig falls man direkt auf dem Freunde-Tab landet,
-    // ohne vorher auf Schulden gewesen zu sein).
     this.friendService.loadFriends();
     this.friendService.loadStatistics();
     this.transactionService.loadTransactions();
+  }
+
+  setTab(tab: 'persons' | 'stats'): void {
+    this.activeTab = tab;
+    if (tab === 'stats') {
+      this.statsReady = false;
+      this.cdr.detectChanges();
+      requestAnimationFrame(() => {
+        this.statsReady = true;
+        this.cdr.detectChanges();
+      });
+    }
   }
 
   isBalanced(balance: number): boolean {
     return Math.abs(balance) < BALANCE_EPSILON;
   }
 
-  get totalBalance(): number {
-    return this.friendsList.reduce((sum, friend) => sum + friend.balance, 0);
+  get isAllSettled(): boolean {
+    return this.friendsList.length > 0 &&
+           this.friendsList.every(f => this.isBalanced(f.balance));
   }
 
-  /** Freunde nach Relevanz sortiert (größter offener Saldo zuerst) statt in Backend-Reihenfolge. */
+  get totalBalance(): number {
+    return this.friendsList.reduce((sum, f) => sum + f.balance, 0);
+  }
+
   get sortedFriendsList(): FriendItem[] {
     return [...this.friendsList].sort((a, b) => Math.abs(b.balance) - Math.abs(a.balance));
+  }
+
+  avatarGradient(name: string): string {
+    const idx = Math.abs(name.charCodeAt(0) + (name.charCodeAt(1) ?? 0)) % AVATAR_GRADIENTS.length;
+    return AVATAR_GRADIENTS[idx];
   }
 
   // ---------- Beglichen-Quote ----------
@@ -108,6 +150,10 @@ export class FriendsComponent implements OnInit {
     return this.ringCircumference * (1 - this.settlementRate / 100);
   }
 
+  get displayRingOffset(): number {
+    return this.statsReady ? this.ringOffset : this.ringCircumference;
+  }
+
   // ---------- Saldo-Rangliste ----------
 
   get rankedFriends(): FriendItem[] {
@@ -124,14 +170,12 @@ export class FriendsComponent implements OnInit {
     return Math.min(100, (Math.abs(balance) / this.maxAbsBalance) * 100);
   }
 
+  barDisplayWidth(balance: number): number {
+    return this.statsReady ? this.barWidthPercent(balance) : 0;
+  }
+
   // ---------- Top-Anlässe ----------
 
-  /**
-   * Nur eigene Ausgaben (type 'iOwe'), keine Forderungen. Vorher wurden
-   * Beträge unabhängig von der Richtung aufsummiert - ein Anlass, der mal
-   * "ich zahle" und mal "mir wird gezahlt" war, ergab eine Summe ohne reale
-   * Bedeutung. "Top-Anlässe" soll zeigen, wofür DU dein Geld ausgibst.
-   */
   get topReasons(): ReasonStat[] {
     const byReason = new Map<string, ReasonStat>();
     for (const t of this.transactions) {
@@ -162,7 +206,6 @@ export class FriendsComponent implements OnInit {
     return best;
   }
 
-  /** Größte eigene Ausgabe - nur 'iOwe', sonst könnte hier fälschlich eine Forderung (jemand schuldet DIR) als "Ausgabe" auftauchen. */
   get biggestTransaction(): Transaction | null {
     const expenses = this.transactions.filter(t => t.type === 'iOwe');
     if (expenses.length === 0) return null;

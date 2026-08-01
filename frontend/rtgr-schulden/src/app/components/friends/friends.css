@@ -1,61 +1,162 @@
 @import '../../../styles/shared-screen.css';
 
 /* ==========================================
-   FREUNDE-LISTE (bildschirmspezifische Zusätze)
+   PERSONEN-TAB: FREUNDESLISTE
    ========================================== */
+
+/* Avatar mit Name-basiertem Gradient + einmaligem Bounce beim Einblenden.
+   Der Bounce nutzt --ease-bounce aus styles.css (überschwingt leicht),
+   bewusst nur hier – dekorativ, nicht strukturell. */
 .friend-avatar {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
   border-radius: 50%;
-  background: linear-gradient(135deg, #0ea5e9, #2563eb);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 0.9rem;
-  box-shadow: 0 2px 10px rgba(14, 165, 233, 0.3);
-  border: 1px solid rgba(56, 189, 248, 0.4);
+  letter-spacing: -0.01em;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  animation: avatarBounce var(--dur-normal) var(--ease-bounce) var(--reveal-delay, 0ms) both;
 }
 
-/* Diese Klasse wurde vorher im Template gebunden, hatte aber nie eine
-   Regel - "Alles ausgeglichen" sah optisch identisch zu "Aktives
-   Guthaben/Schuld" aus. */
-.card-subtitle.text-balanced {
+/* Wird von der reveal.directive.ts via --reveal-delay gesetzt,
+   damit jeder Avatar mit dem jeweiligen Karten-Stagger bounced. */
+.reveal-item--visible .friend-avatar {
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+/* Gesamtsaldo-Karte: Icon-Container */
+.total-balance-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.total-balance-icon svg {
+  width: 18px;
+  height: 18px;
+  color: #94a3b8;
+  transition: color var(--dur-normal) var(--ease);
+}
+
+/* Gesamtsaldo-Karte: Farbvarianten */
+.total-balance-card.is-positive .card-title { color: #6ee7b7; }
+.total-balance-card.is-negative .card-title { color: #fda4af; }
+.total-balance-card.is-positive .total-balance-icon { background: rgba(16,185,129,.1); border-color: rgba(16,185,129,.2); }
+.total-balance-card.is-positive .total-balance-icon svg { color: #10b981; }
+.total-balance-card.is-negative .total-balance-icon { background: rgba(244,63,94,.1); border-color: rgba(244,63,94,.2); }
+.total-balance-card.is-negative .total-balance-icon svg { color: #f43f5e; }
+
+/* "Alles ausgeglichen"-Zustand: Grün-Tönung der Karte */
+.total-balance-card.all-settled {
+  position: relative;
+  overflow: visible;
+}
+
+.total-balance-card.all-settled .total-balance-icon {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.total-balance-card.all-settled .total-balance-icon svg { color: #10b981; }
+
+.settled-title { color: #6ee7b7; }
+
+.card-amount.is-settled {
   color: #10b981;
+  font-weight: 900;
 }
 
-/* Gesamtsaldo-Karte: der Titel färbt sich mit demselben Grün/Rot wie der
-   Betrag selbst (Guthaben insgesamt = grün, Schulden insgesamt = rot) -
-   vorher stand hier ein fixes Blau, das mit der eigentlichen Bedeutung
-   (positiv/negativ) nichts zu tun hatte und der Farbsprache des Rests der
-   App (nur Grün/Rot für Geld) widersprach. .bubble-container liegt im
-   gekapselten Bubble-Template und ist von hier aus nicht erreichbar (siehe
-   :host-context-Regel in bubble.css für den Fall, dass die Bubble selbst
-   auf einen Vorfahren reagieren soll). */
-.total-balance-card.is-positive .card-title {
-  color: #6ee7b7;
+/* ---------- Konfetti-Burst ---------- */
+.confetti-burst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  pointer-events: none;
+  z-index: 20;
 }
 
-.total-balance-card.is-negative .card-title {
-  color: #fda4af;
+.confetti-piece {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  animation: confettiFly 0.75s var(--ease-emphasized) calc(var(--i, 0) * 22ms) both;
+}
+
+.confetti-piece:nth-child(1)  { --dx:  0px;  --dy: -58px; background: #38bdf8; }
+.confetti-piece:nth-child(2)  { --dx:  29px; --dy: -50px; background: #f59e0b; }
+.confetti-piece:nth-child(3)  { --dx:  50px; --dy: -29px; background: #10b981; }
+.confetti-piece:nth-child(4)  { --dx:  58px; --dy:  0px;  background: #f43f5e; }
+.confetti-piece:nth-child(5)  { --dx:  50px; --dy:  29px; background: #8b5cf6; }
+.confetti-piece:nth-child(6)  { --dx:  29px; --dy:  50px; background: #38bdf8; }
+.confetti-piece:nth-child(7)  { --dx:  0px;  --dy:  58px; background: #f59e0b; }
+.confetti-piece:nth-child(8)  { --dx: -29px; --dy:  50px; background: #10b981; }
+.confetti-piece:nth-child(9)  { --dx: -50px; --dy:  29px; background: #f43f5e; }
+.confetti-piece:nth-child(10) { --dx: -58px; --dy:  0px;  background: #8b5cf6; }
+.confetti-piece:nth-child(11) { --dx: -50px; --dy: -29px; background: #38bdf8; }
+.confetti-piece:nth-child(12) { --dx: -29px; --dy: -50px; background: #f59e0b; }
+
+/* Subtitle-Farbklasse */
+.card-subtitle.text-balanced { color: #10b981; }
+
+/* ---------- Leer-Zustand ---------- */
+.friends-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3.5rem 1.5rem 2.5rem;
+  animation: contentIn var(--dur-normal) var(--ease) both;
+}
+
+.empty-illustration {
+  width: 120px;
+  height: 120px;
+  animation: emptyFloat 3.5s ease-in-out infinite;
+  filter: drop-shadow(0 8px 24px rgba(56, 189, 248, 0.15));
+}
+
+@keyframes emptyFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+
+.empty-state-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.empty-state-body {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+  text-align: center;
+  line-height: 1.5;
 }
 
 /* ==========================================
-   STATISTIKEN: leichter Versatz zwischen den Karten, damit sie nicht alle
-   exakt gleichzeitig auftauchen.
+   STATISTIKEN
    ========================================== */
-.info-card:nth-of-type(1) { animation-delay: 0ms; }
-.info-card:nth-of-type(2) { animation-delay: 40ms; }
-.info-card:nth-of-type(3) { animation-delay: 80ms; }
-.info-card:nth-of-type(4) { animation-delay: 120ms; }
-.info-card:nth-of-type(5) { animation-delay: 160ms; }
 
-/* Bug: die Statistik-Karten sind bare <app-bubble>-Elemente ohne
-   umschließendes .transaction-card (das normalerweise den margin-bottom
-   liefert) - dadurch klebten sie ohne jeden Abstand aneinander. Nur direkte
-   Kinder treffen, damit die Personen-Liste (dort liegt app-bubble eine
-   Ebene tiefer, in .transaction-card) unberührt bleibt. */
+/* Karten-Abstände (Stat-Karten liegen direkt als <app-bubble>, ohne .transaction-card) */
 .list-fade-wrapper > app-bubble {
   display: block;
   margin-bottom: 0.75rem;
@@ -91,7 +192,7 @@
 
 .ring-track {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.08);
+  stroke: rgba(255, 255, 255, 0.07);
   stroke-width: 8;
 }
 
@@ -100,7 +201,10 @@
   stroke: #38bdf8;
   stroke-width: 8;
   stroke-linecap: round;
+  /* Transition animiert den Weg von ringCircumference (0%) zum Zielwert,
+     gesteuert über das statsReady-Flag im Component. */
   transition: stroke-dashoffset var(--dur-slow) var(--ease-emphasized);
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.45));
 }
 
 .ring-label {
@@ -112,10 +216,10 @@
 }
 
 .ring-value {
-  font-size: 1.2rem;
-  font-weight: 800;
+  font-size: 1.25rem;
+  font-weight: 900;
   color: #f8fafc;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 .ring-stat-text {
@@ -140,7 +244,7 @@
 .rank-list {
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
+  gap: 0.8rem;
 }
 
 .rank-row {
@@ -150,11 +254,11 @@
 }
 
 .rank-index {
-  width: 16px;
+  width: 18px;
   flex-shrink: 0;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #475569;
   text-align: center;
 }
 
@@ -163,7 +267,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.35rem;
 }
 
 .rank-name {
@@ -176,7 +280,7 @@
 }
 
 .rank-bar-track {
-  height: 6px;
+  height: 5px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.06);
   overflow: hidden;
@@ -186,16 +290,12 @@
   height: 100%;
   border-radius: 999px;
   background: #64748b;
+  /* Transition animiert von 0% (statsReady=false) zum Zielwert (statsReady=true). */
   transition: width var(--dur-slow) var(--ease-emphasized);
 }
 
-.rank-bar-fill.is-positive {
-  background: linear-gradient(90deg, #10b981, #34d399);
-}
-
-.rank-bar-fill.is-negative {
-  background: linear-gradient(90deg, #f43f5e, #fb7185);
-}
+.rank-bar-fill.is-positive { background: linear-gradient(90deg, #059669, #34d399); }
+.rank-bar-fill.is-negative { background: linear-gradient(90deg, #be123c, #fb7185); }
 
 .rank-amount {
   flex-shrink: 0;
@@ -210,7 +310,7 @@
 .reason-list {
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
+  gap: 0.8rem;
 }
 
 .reason-row {
@@ -220,17 +320,18 @@
 }
 
 .reason-rank {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: rgba(56, 189, 248, 0.12);
+  background: rgba(56, 189, 248, 0.1);
   color: #38bdf8;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 800;
+  border: 1px solid rgba(56, 189, 248, 0.2);
 }
 
 .reason-info {
@@ -238,6 +339,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  gap: 0.1rem;
 }
 
 .reason-name {
@@ -250,7 +352,7 @@
 }
 
 .reason-count {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: #64748b;
 }
 
@@ -271,18 +373,23 @@
 .highlight-tile {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.9rem;
-  border-radius: 12px;
+  gap: 0.3rem;
+  padding: 1rem;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   min-width: 0;
+  transition: background var(--dur-quick) var(--ease);
+}
+
+.highlight-tile:hover {
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .highlight-label {
-  font-size: 0.65rem;
+  font-size: 0.63rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: #64748b;
   font-weight: 700;
 }
@@ -297,7 +404,7 @@
 }
 
 .highlight-sub {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: #94a3b8;
   white-space: nowrap;
   overflow: hidden;

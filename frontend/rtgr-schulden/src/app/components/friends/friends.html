@@ -1,65 +1,36 @@
 <div class="app-viewport">
-  <!-- STICKY HEADER GROUP (Beinhaltet Tabs) -->
+
+  <!-- STICKY HEADER -->
   <div class="scroll-header-group">
     <div class="scroll-header-content">
-      <!-- NAV TABS -->
       <nav class="sticky-tabs-container">
         <app-bubble width="100%">
           <div class="segmented-control segments-two" [style.--active-segment-index]="activeSegmentIndex">
             <div class="segment-active-indicator" aria-hidden="true"></div>
-            <button
-              type="button"
-              class="segment-btn"
-              [class.active]="activeTab === 'persons'"
-              [attr.aria-pressed]="activeTab === 'persons'"
-              (click)="activeTab = 'persons'"
-            >
-              <svg
-                class="segment-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.2"
-              >
-                <path
-                  d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <circle cx="9" cy="7" r="4" stroke-linecap="round" stroke-linejoin="round" />
-                <path
-                  d="M23 21v-2a4 4 0 0 0-3-3.87"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="M16 3.13a4 4 0 0 1 0 7.75"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
+
+            <button type="button" class="segment-btn"
+                    [class.active]="activeTab === 'persons'"
+                    [attr.aria-pressed]="activeTab === 'persons'"
+                    (click)="setTab('persons')">
+              <svg class="segment-icon" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="9" cy="7" r="4" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
               <span>Personen</span>
             </button>
 
-            <button
-              type="button"
-              class="segment-btn"
-              [class.active]="activeTab === 'stats'"
-              [attr.aria-pressed]="activeTab === 'stats'"
-              (click)="activeTab = 'stats'"
-            >
-              <svg
-                class="segment-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.2"
-              >
-                <path
-                  d="M18 20V10M12 20V4M6 20v-6"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
+            <button type="button" class="segment-btn"
+                    [class.active]="activeTab === 'stats'"
+                    [attr.aria-pressed]="activeTab === 'stats'"
+                    (click)="setTab('stats')">
+              <svg class="segment-icon" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.2">
+                <path d="M18 20V10M12 20V4M6 20v-6"
+                      stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
               <span>Statistiken</span>
             </button>
@@ -69,95 +40,172 @@
     </div>
   </div>
 
-  <!-- FREUNDE ODER STATISTIKEN -->
+  <!-- MAIN -->
   <main class="transactions-section">
     <div class="list-fade-wrapper">
-      @if (activeTab === 'persons') {
-        @if (friendsList.length > 0) {
-          <!-- Gesamtsaldo über alle Freunde - reine Wiederverwendung der
-               bestehenden Karten-Bausteine, keine neue Komponente nötig. -->
-          <div class="transaction-card total-balance-card" [class.is-positive]="totalBalance > 0" [class.is-negative]="totalBalance < 0">
-            <app-bubble width="100%">
-              <div class="card-inner">
-                <div class="card-info-wrapper">
-                  <div class="card-info">
-                    <span class="card-title">Gesamtsaldo</span>
-                    <span class="card-subtitle">Über alle Freunde zusammen</span>
-                  </div>
-                </div>
-                <div class="card-right-group">
-                  <span
-                    class="card-amount"
-                    [class.is-positive]="totalBalance > 0"
-                    [class.is-negative]="totalBalance < 0"
-                    [countUp]="totalBalance"
-                    countUpPrefixPositive="+"
-                  ></span>
-                </div>
-              </div>
-            </app-bubble>
-          </div>
-        }
-        @for (friend of sortedFriendsList; track friend.id) {
-          <div class="transaction-card">
-            <app-bubble width="100%">
-              <div class="card-inner">
-                <!-- Info Block mit Avatar -->
-                <div class="card-info-wrapper">
-                  <div class="friend-avatar">{{ friend.name.charAt(0).toUpperCase() }}</div>
-                  <div class="card-info">
-                    <div class="title-row">
-                      <span class="card-title">{{ friend.name }}</span>
-                    </div>
-                    <span class="card-subtitle" [class.text-balanced]="isBalanced(friend.balance)">
-                      {{
-                        isBalanced(friend.balance) ? 'Alles ausgeglichen' : 'Aktives Guthaben/Schuld'
-                      }}
-                    </span>
-                  </div>
-                </div>
 
-                <!-- Betrag / Status -->
+      @if (activeTab === 'persons') {
+
+        <!-- SKELETON: wird während des initialen Ladens angezeigt -->
+        @if (isLoading) {
+          @for (_ of [1, 2, 3]; track $index) {
+            <div class="skeleton-card" [style.animation-delay]="$index * 60 + 'ms'">
+              <div class="skeleton-avatar skeleton-pulse"></div>
+              <div class="skeleton-lines">
+                <div class="skeleton-line w-60 skeleton-pulse"></div>
+                <div class="skeleton-line w-40 skeleton-pulse"></div>
+              </div>
+              <div class="skeleton-amount skeleton-pulse"></div>
+            </div>
+          }
+
+        <!-- LEER-ZUSTAND mit Animation -->
+        } @else if (friendsList.length === 0) {
+          <div class="friends-empty-state">
+            <div class="empty-illustration" aria-hidden="true">
+              <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Äußerer Ring -->
+                <circle cx="60" cy="60" r="52" stroke="rgba(56,189,248,.15)" stroke-width="1.5"
+                        stroke-dasharray="6 4"/>
+                <!-- Mittlerer Ring -->
+                <circle cx="60" cy="60" r="34" stroke="rgba(56,189,248,.1)" stroke-width="1"/>
+                <!-- Personen-Symbol -->
+                <circle cx="60" cy="46" r="11" fill="rgba(56,189,248,.18)" stroke="#38bdf8"
+                        stroke-width="1.5"/>
+                <path d="M38 80c0-12.15 9.85-22 22-22s22 9.85 22 22"
+                      stroke="#38bdf8" stroke-width="1.5" stroke-linecap="round" fill="none"
+                      fill-opacity=".18"/>
+                <!-- Plus-Zeichen -->
+                <circle cx="88" cy="36" r="10" fill="rgba(56,189,248,.12)" stroke="#38bdf8"
+                        stroke-width="1.5"/>
+                <path d="M88 31v10M83 36h10" stroke="#38bdf8" stroke-width="1.5"
+                      stroke-linecap="round"/>
+              </svg>
+            </div>
+            <p class="empty-state-title">Noch keine Kontakte</p>
+            <p class="empty-state-body">Füge eine Rechnung hinzu,<br>um loszulegen.</p>
+          </div>
+
+        <!-- FREUNDESLISTE -->
+        } @else {
+
+          <!-- GESAMTSALDO KARTE -->
+          <div class="transaction-card total-balance-card"
+               [class.is-positive]="totalBalance > 0"
+               [class.is-negative]="totalBalance < 0"
+               [class.all-settled]="isAllSettled"
+               reveal [revealDelay]="0">
+            <app-bubble width="100%">
+              <div class="card-inner">
+                <div class="card-info-wrapper">
+                  <div class="total-balance-icon" aria-hidden="true">
+                    @if (isAllSettled) {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                        <polyline points="22 4 12 14.01 9 11.01"
+                                  stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    } @else {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="12" y1="1" x2="12" y2="23" stroke-linecap="round"/>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    }
+                  </div>
+                  <div class="card-info">
+                    @if (isAllSettled) {
+                      <span class="card-title settled-title">Alles ausgeglichen!</span>
+                      <span class="card-subtitle">Keine offenen Schulden</span>
+                    } @else {
+                      <span class="card-title">Gesamtsaldo</span>
+                      <span class="card-subtitle">Über alle Freunde zusammen</span>
+                    }
+                  </div>
+                </div>
                 <div class="card-right-group">
-                  <span
-                    class="card-amount"
-                    [class.is-positive]="friend.balance > 0"
-                    [class.is-negative]="friend.balance < 0"
-                    [countUp]="friend.balance"
-                    countUpPrefixPositive="+"
-                  ></span>
+                  <span class="card-amount"
+                        [class.is-positive]="totalBalance > 0"
+                        [class.is-negative]="totalBalance < 0"
+                        [class.is-settled]="isAllSettled"
+                        [countUp]="totalBalance"
+                        countUpPrefixPositive="+"></span>
                 </div>
               </div>
             </app-bubble>
+
+            <!-- Konfetti-Burst beim "Alles ausgeglichen"-Moment -->
+            @if (isAllSettled) {
+              <div class="confetti-burst" aria-hidden="true">
+                @for (i of confettiIndices; track i) {
+                  <span class="confetti-piece" [style.--i]="i"></span>
+                }
+              </div>
+            }
           </div>
-        } @empty {
-          <app-bubble width="100%">
-            <div class="empty-state">Keine Freunde gefunden</div>
-          </app-bubble>
+
+          <!-- FREUNDE-KARTEN -->
+          @for (friend of sortedFriendsList; track friend.id; let i = $index) {
+            <div class="transaction-card friend-card"
+                 reveal [revealDelay]="(i + 1) * 50"
+                 tilt [tiltMax]="4">
+              <app-bubble width="100%">
+                <div class="card-inner">
+
+                  <div class="card-info-wrapper">
+                    <!-- Avatar mit individueller Farbe + Bounce-Animation -->
+                    <div class="friend-avatar" [style.background]="avatarGradient(friend.name)">
+                      {{ friend.name.charAt(0).toUpperCase() }}
+                    </div>
+
+                    <div class="card-info">
+                      <div class="title-row">
+                        <span class="card-title">{{ friend.name }}</span>
+                      </div>
+                      <span class="card-subtitle"
+                            [class.text-balanced]="isBalanced(friend.balance)">
+                        {{ isBalanced(friend.balance) ? 'Alles ausgeglichen' : 'Aktives Guthaben/Schuld' }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="card-right-group">
+                    <span class="card-amount"
+                          [class.is-positive]="friend.balance > 0"
+                          [class.is-negative]="friend.balance < 0"
+                          [countUp]="friend.balance"
+                          countUpPrefixPositive="+"></span>
+                  </div>
+
+                </div>
+              </app-bubble>
+            </div>
+          }
         }
+
       } @else {
-        <!-- ECHTE STATISTIKEN ANSICHT (Erweitert) -->
-        <app-bubble width="100%">
+
+        <!-- ===== STATISTIKEN ===== -->
+
+        <!-- Finanz-Übersicht -->
+        <app-bubble width="100%" reveal [revealDelay]="0">
           <div class="info-card">
             <div class="info-card-header">
               <h3 class="info-card-title">Finanz-Übersicht</h3>
             </div>
-
             <div class="info-row">
               <span class="info-row-label">Gesamtausgaben</span>
               <span class="info-row-value is-negative" [countUp]="friendStats?.totalSpent ?? 0"></span>
             </div>
-
             <div class="info-row">
               <span class="info-row-label">Erhaltene Beträge</span>
               <span class="info-row-value is-positive" [countUp]="friendStats?.totalReceived ?? 0"></span>
             </div>
-
             <div class="info-row">
               <span class="info-row-label">Ø pro Rechnung</span>
               <span class="info-row-value" [countUp]="averageAmount"></span>
             </div>
-
             <div class="info-row">
               <span class="info-row-label">Aktive Freunde</span>
               <span class="info-row-value">{{ friendStats?.activeFriendsCount ?? 0 }}</span>
@@ -165,8 +213,8 @@
           </div>
         </app-bubble>
 
-        <!-- BEGLICHEN-QUOTE -->
-        <app-bubble width="100%">
+        <!-- Beglichen-Quote mit animiertem Ring -->
+        <app-bubble width="100%" reveal [revealDelay]="80">
           <div class="info-card">
             <div class="info-card-header">
               <h3 class="info-card-title">Beglichen-Quote</h3>
@@ -174,13 +222,10 @@
             <div class="ring-stat-row">
               <div class="ring-stat">
                 <svg viewBox="0 0 96 96" class="settlement-ring" aria-hidden="true">
-                  <circle class="ring-track" cx="48" cy="48" r="42"></circle>
-                  <circle
-                    class="ring-fill"
-                    cx="48" cy="48" r="42"
-                    [style.stroke-dasharray]="ringCircumference"
-                    [style.stroke-dashoffset]="ringOffset"
-                  ></circle>
+                  <circle class="ring-track" cx="48" cy="48" r="42"/>
+                  <circle class="ring-fill" cx="48" cy="48" r="42"
+                          [style.stroke-dasharray]="ringCircumference"
+                          [style.stroke-dashoffset]="displayRingOffset"/>
                 </svg>
                 <div class="ring-label">
                   <span class="ring-value">{{ settlementRate }}%</span>
@@ -194,8 +239,8 @@
           </div>
         </app-bubble>
 
-        <!-- SALDO-RANGLISTE -->
-        <app-bubble width="100%">
+        <!-- Saldo-Rangliste mit animierten Balken -->
+        <app-bubble width="100%" reveal [revealDelay]="160">
           <div class="info-card">
             <div class="info-card-header">
               <h3 class="info-card-title">Saldo-Rangliste</h3>
@@ -207,21 +252,17 @@
                   <div class="rank-info">
                     <span class="rank-name">{{ friend.name }}</span>
                     <div class="rank-bar-track">
-                      <div
-                        class="rank-bar-fill"
-                        [class.is-positive]="friend.balance > 0"
-                        [class.is-negative]="friend.balance < 0"
-                        [style.width.%]="barWidthPercent(friend.balance)"
-                      ></div>
+                      <div class="rank-bar-fill"
+                           [class.is-positive]="friend.balance > 0"
+                           [class.is-negative]="friend.balance < 0"
+                           [style.width.%]="barDisplayWidth(friend.balance)"></div>
                     </div>
                   </div>
-                  <span
-                    class="rank-amount"
-                    [class.is-positive]="friend.balance > 0"
-                    [class.is-negative]="friend.balance < 0"
-                    [countUp]="friend.balance"
-                    countUpPrefixPositive="+"
-                  ></span>
+                  <span class="rank-amount"
+                        [class.is-positive]="friend.balance > 0"
+                        [class.is-negative]="friend.balance < 0"
+                        [countUp]="friend.balance"
+                        countUpPrefixPositive="+"></span>
                 </div>
               } @empty {
                 <p class="stats-empty">Noch keine offenen Salden zum Vergleichen.</p>
@@ -230,8 +271,8 @@
           </div>
         </app-bubble>
 
-        <!-- TOP-ANLÄSSE -->
-        <app-bubble width="100%">
+        <!-- Top-Anlässe -->
+        <app-bubble width="100%" reveal [revealDelay]="240">
           <div class="info-card">
             <div class="info-card-header">
               <h3 class="info-card-title">Top-Anlässe</h3>
@@ -253,8 +294,8 @@
           </div>
         </app-bubble>
 
-        <!-- HIGHLIGHTS -->
-        <app-bubble width="100%">
+        <!-- Highlights -->
+        <app-bubble width="100%" reveal [revealDelay]="320">
           <div class="info-card">
             <div class="info-card-header">
               <h3 class="info-card-title">Highlights</h3>
@@ -263,7 +304,9 @@
               <div class="highlight-tile">
                 <span class="highlight-label">Meistgeteilt mit</span>
                 <span class="highlight-value">{{ topPartner?.name ?? '–' }}</span>
-                <span class="highlight-sub">{{ topPartner ? topPartner.count + 'x zusammen' : 'Noch keine Daten' }}</span>
+                <span class="highlight-sub">
+                  {{ topPartner ? topPartner.count + 'x zusammen' : 'Noch keine Daten' }}
+                </span>
               </div>
               <div class="highlight-tile">
                 <span class="highlight-label">Größte Ausgabe</span>
@@ -273,6 +316,7 @@
             </div>
           </div>
         </app-bubble>
+
       }
     </div>
   </main>
